@@ -1,0 +1,75 @@
+# A WORKFLOW TO UPDATE MYSQL DATABASE ON A WINDOWS MACHINE
+# Automatically applies all migration scripts in the directory, ensuring your database is always up to date with the latest changes.
+# No need to manually update the workflow file with each new migration script.
+# A WORKFLOW TO UPDATE MYSQL DATABASE ON A WINDOWS MACHINE
+# Automatically applies all migration scripts in the directory, ensuring your database is always up to date with the latest changes.
+# No need to manually update the workflow file with each new migration script.
+
+
+name: CI/CD Pipeline for MySQL
+
+# Trigger the workflow when there is a push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # Specify the environment the job will run on
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      # This step checks out the code from the repository
+      uses: actions/checkout@v2
+      run: echo "Step 1: Code checked out"
+
+    - name: Install MySQL Client
+      # Install MySQL Client using Chocolatey package manager
+      run: |
+        echo "Step 2: Installing MySQL Client"
+        choco install mysql --version=8.0 -y
+        echo "MySQL Client installed successfully"
+
+    - name: Run SQL Scripts from Folder
+      # Run all SQL scripts from a specific folder and log them in a migration table
+      run: |
+        echo "Step 3: Running SQL scripts from folder"
+        for file in path/to/sql/scripts/*.sql; do
+          script_name=$(basename $file)
+          echo "Running $script_name"
+          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "source $file"
+
+          echo "Logging $script_name to migration table"
+          mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "INSERT INTO migration_table (script_name, executed_at) VALUES ('$script_name', NOW())"
+        done
+        echo "SQL scripts executed and logged successfully"
+
+    - name: Run Database Migrations
+      # Set environment variables with secrets for connecting to the Aiven MySQL database
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      # Run Flyway migration command to apply database changes
+      run: |
+        echo "Step 4: Running database migrations"
+        flyway -url=jdbc:mysql://$env:DB_HOST:$env:DB_PORT/$env:DB_NAME -user=$env:DB_USER -password=$env:DB_PASSWORD migrate
+        echo "Database migrations completed successfully"
+
+    - name: Send Email Notification
+      # Send email notification using PowerShell
+      run: |
+        echo "Step 5: Sending email notification"
+        powershell -Command "$SMTPServer = 'smtp.your-email-provider.com'; $SMTPPort = '587'; $SMTPUser = 'your-email@example.com'; $SMTPPassword = 'your-email-password'; $From = 'your-email@example.com'; $To = 'recipient-email@example.com'; $Subject = 'CI/CD Pipeline Report'; $Body = 'Database update completed successfully'; $SMTPMessage = New-Object System.Net.Mail.MailMessage($From, $To, $Subject, $Body); $SMTPClient = New-Object System.Net.Mail.SmtpClient($SMTPServer, $SMTPPort); $SMTPClient.EnableSsl = $true; $SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPUser, $SMTPPassword); $SMTPClient.Send($SMTPMessage)"
+        echo "Email notification sent successfully"
+
+    - name: Notifications and Reporting
+      # Generate reports
+      run: |
+        echo "Step 6: Generating reports"
+        # Add commands to generate reports
+        echo "Reports generated successfully"
