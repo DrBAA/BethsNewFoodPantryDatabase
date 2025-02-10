@@ -21,7 +21,7 @@ SET @@SESSION.SQL_LOG_BIN= 0;
 -- GTID state at the beginning of the backup 
 --
 
-SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '38da5713-4792-11ef-ad18-001ec969c48d:1-16';
+SET @@GLOBAL.GTID_PURGED=/*!80000 '+'*/ '38da5713-4792-11ef-ad18-001ec969c48d:1-37';
 
 --
 -- Table structure for table `food_parcels_for_issue`
@@ -669,6 +669,32 @@ INSERT INTO `members_personal_details` VALUES ('M01','Agatha','Benson','25-35',2
 UNLOCK TABLES;
 
 --
+-- Table structure for table `migrations_log`
+--
+
+DROP TABLE IF EXISTS `migrations_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `migrations_log` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `script_name` varchar(255) NOT NULL,
+  `applied_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  UNIQUE KEY `script_name` (`script_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrations_log`
+--
+
+LOCK TABLES `migrations_log` WRITE;
+/*!40000 ALTER TABLE `migrations_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `migrations_log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `other_support_requested_by_members`
 --
 
@@ -929,4 +955,4 @@ SET @@SESSION.SQL_LOG_BIN = @MYSQLDUMP_TEMP_LOG_BIN;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-09 18:22:15
+-- Dump completed on 2025-02-10 23:26:06
