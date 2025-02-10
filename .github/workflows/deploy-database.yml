@@ -58,6 +58,7 @@ jobs:
         done
         echo "SQL scripts executed and logged successfully"
 
+
     - name: Run Database Migrations
       # Set environment variables with secrets for connecting to the Aiven MySQL database
       env:
