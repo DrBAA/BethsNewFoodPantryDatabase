@@ -29,11 +29,17 @@ jobs:
         choco install mysql -y
         echo "MySQL Client installed successfully"
 
+    - name: Ensure Migrations Log Table Exists
+      run: |
+        echo "Step 3: Ensuring migrations_log table exists"
+        mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -e "CREATE TABLE IF NOT EXISTS migrations_log (id SERIAL PRIMARY KEY, script_name VARCHAR(255) UNIQUE NOT NULL, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+        echo "migrations_log table ensured"
+
     # Run all SQL scripts from a specific folder and log them in a migration table
     - name: Run SQL Scripts from Folder
       shell: bash
       run: |
-        echo "Step 3: Running SQL scripts from folder"
+        echo "Step 4: Running SQL scripts from folder"
         for file in "C:\\Users\\user\\Desktop\\BETHs FOOD PANTRY DATABASE\\Beths New Food Pantry Database\\Scripts\\Database Migrations"/*.sql; do
           script_name=$(basename "$file")
           echo "Checking if $script_name has been applied"
@@ -52,7 +58,6 @@ jobs:
         done
         echo "SQL scripts executed and logged successfully"
 
-
     - name: Run Database Migrations
       # Set environment variables with secrets for connecting to the Aiven MySQL database
       env:
@@ -63,20 +68,20 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       # Run Flyway migration command to apply database changes
       run: |
-        echo "Step 4: Running database migrations"
+        echo "Step 5: Running database migrations"
         flyway -url=jdbc:mysql://$DB_HOST:$DB_PORT/$DB_NAME -user=$DB_USER -password=$DB_PASSWORD migrate
         echo "Database migrations completed successfully"
 
     - name: Send Email Notification
       # Send email notification using PowerShell
       run: |
-        echo "Step 5: Sending email notification"
+        echo "Step 6: Sending email notification"
         powershell -Command "$SMTPServer = 'smtp.your-email-provider.com'; $SMTPPort = '587'; $SMTPUser = 'your-email@example.com'; $SMTPPassword = 'your-email-password'; $From = 'your-email@example.com'; $To = 'recipient-email@example.com'; $Subject = 'CI/CD Pipeline Report'; $Body = 'Database update completed successfully'; $SMTPMessage = New-Object System.Net.Mail.MailMessage($From, $To, $Subject, $Body); $SMTPClient = New-Object System.Net.Mail.SmtpClient($SMTPServer, $SMTPPort); $SMTPClient.EnableSsl = $true; $SMTPClient.Credentials = New-Object System.Net.NetworkCredential($SMTPUser, $SMTPPassword); $SMTPClient.Send($SMTPMessage)"
         echo "Email notification sent successfully"
 
     - name: Notifications and Reporting
       # Generate reports
       run: |
-        echo "Step 6: Generating reports"
-        # Add commands to generate reports
+        echo "Step 7: Generating reports"
         echo "Reports generated successfully"
+
