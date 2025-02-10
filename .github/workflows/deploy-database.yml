@@ -8,7 +8,6 @@
 
 name: CI/CD Pipeline for MySQL
 
-# Trigger the workflow when there is a push to the main branch
 on:
   push:
     branches:
@@ -16,14 +15,12 @@ on:
 
 jobs:
   deploy:
-    # Specify the environment the job will run on
     runs-on: windows-latest
 
     steps:
     - name: Checkout Code
       # This step checks out the code from the repository
       uses: actions/checkout@v2
-      run: echo "Step 1: Code checked out"
 
     - name: Install MySQL Client
       # Install MySQL Client using Chocolatey package manager
@@ -34,9 +31,10 @@ jobs:
 
     - name: Run SQL Scripts from Folder
       # Run all SQL scripts from a specific folder and log them in a migration table
+      shell: bash
       run: |
         echo "Step 3: Running SQL scripts from folder"
-        for file in path/to/sql/scripts/*.sql; do
+        for file in "C:\\Users\\user\\Desktop\\BETHs FOOD PANTRY DATABASE\\Beths New Food Pantry Database\\Scripts\\Database Migrations\\*.sql"; do
           script_name=$(basename $file)
           echo "Running $script_name"
           mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "source $file"
@@ -57,7 +55,7 @@ jobs:
       # Run Flyway migration command to apply database changes
       run: |
         echo "Step 4: Running database migrations"
-        flyway -url=jdbc:mysql://$env:DB_HOST:$env:DB_PORT/$env:DB_NAME -user=$env:DB_USER -password=$env:DB_PASSWORD migrate
+        flyway -url=jdbc:mysql://$DB_HOST:$DB_PORT/$DB_NAME -user=$DB_USER -password=$DB_PASSWORD migrate
         echo "Database migrations completed successfully"
 
     - name: Send Email Notification
@@ -73,3 +71,4 @@ jobs:
         echo "Step 6: Generating reports"
         # Add commands to generate reports
         echo "Reports generated successfully"
+
