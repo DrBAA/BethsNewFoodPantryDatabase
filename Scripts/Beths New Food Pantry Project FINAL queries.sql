@@ -173,7 +173,7 @@ SELECT
     days_since_last_issue AS days_since_last_collection,
     next_issue_due_date AS date_due_for_next_collection,
     IF((date_last_issued IS NULL) OR (days_since_last_issue >= 7), 'YES', 
-       CONCAT('NO. Please ask the member to come back on or after ', next_issue_due_date)) AS Issue_a_food_parcel_today_or_Not
+       CONCAT('NO. Please come back on or after ', next_issue_due_date)) AS Issue_a_food_parcel_today_or_Not
 FROM View_members_Issued_or_Not_issued_with_food_parcels;
 
       
@@ -288,13 +288,8 @@ BEGIN
     
 	IF NEW.food_parcel_id = v_food_parcel_id THEN
 		UPDATE food_parcels_for_issue
-		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued)
-		WHERE food_parcel_id = v_food_parcel_id; 
-    END IF;
-    
-	IF NEW.food_parcel_id = v_food_parcel_id THEN
-		UPDATE food_parcels_for_issue
-		SET total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
 		WHERE food_parcel_id = v_food_parcel_id; 
     END IF;
 END $$
@@ -311,7 +306,8 @@ IVY DUNCAN MEMBER ID M08 - VEGETARIAN
 JACK MAIDENI MEMBER ID M12 - VEGAN
 THE TRIGGER WILL AUTOMATICALLY UPDATE THE FOOD PARCELS STOCK LEVELS ON the FOOD PARCELS FOR ISSUE TABLE
 
-CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M06', 'FP02', 'WAL01', CURDATE(), 1); 
+CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M07', 'FP01', 'WAL02', CURDATE(), 1); 
+CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M09', 'FP02', 'WAL02', CURDATE(), 1); 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M10', 'FP03', 'DUD02', CURDATE(), 1); 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M08', 'FP05', 'BCC01', CURDATE(), 1); 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M12', 'FP04', 'ERD01', CURDATE(), 1);

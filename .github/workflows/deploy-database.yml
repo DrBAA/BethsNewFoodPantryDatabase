@@ -41,22 +41,27 @@ jobs:
       run: |
         echo "Step 4: Running SQL scripts from folder"
         for file in "C:\\Users\\user\\Desktop\\BETHs FOOD PANTRY DATABASE\\Beths New Food Pantry Database\\Scripts\\Database Migrations"/*.sql; do
-          script_name=$(basename "$file")
-          echo "Checking if $script_name has been applied"
+          if [ -f "$file" ]; then
+            script_name=$(basename "$file")
+            echo "Checking if $script_name has been applied"
 
-          count=$(mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -se "SELECT COUNT(*) FROM migrations_log WHERE script_name='$script_name'")
+            count=$(mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -se "SELECT COUNT(*) FROM migrations_log WHERE script_name='$script_name'")
 
-          if [ $count -eq 0 ]; then
-            echo "Running $script_name"
-            mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -e "source \"$file\""
+            if [ $count -eq 0 ]; then
+              echo "Running $script_name"
+              mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -e "source \"$file\""
 
-            echo "Logging $script_name to migration table"
-            mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -e "INSERT INTO migrations_log (script_name, applied_at) VALUES ('$script_name', NOW())"
+              echo "Logging $script_name to migration table"
+              mysql -h ${{ secrets.DB_HOST }} -P ${{ secrets.DB_PORT }} -u ${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -D ${{ secrets.DB_NAME }} -e "INSERT INTO migrations_log (script_name, applied_at) VALUES ('$script_name', NOW())"
+            else
+              echo "$script_name has already been applied, skipping"
+            fi
           else
-            echo "$script_name has already been applied, skipping"
+            echo "No SQL files found in the specified directory."
           fi
         done
         echo "SQL scripts executed and logged successfully"
+
 
 
     - name: Run Database Migrations

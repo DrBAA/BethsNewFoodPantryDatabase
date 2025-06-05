@@ -102,12 +102,19 @@ SELECT * FROM beths_new_food_pantry.food_parcels_for_issue;
 INSERT INTO incoming_food_parcels
 (food_parcel_id, date_received, amount_of_food_parcels_received)
 	VALUES
-    
+	('FP01', CURDATE(), 5),
+    ('FP02', CURDATE(), 5),
+    ('FP03', CURDATE(), 5),
+    ('FP04', CURDATE(), 5),
+    ('FP05', CURDATE(), 5);
+
+# INITIAL INSERTS ON DATABASE CREATION    
 	('FP01','2023-12-12', 30),
   	('FP04', '2023-12-14', 20),
 	('FP02', '2024-01-08', 20),
 	('FP03', '2024-01-12', 20),   
 	('FP05', '2023-12-12', 20);
+
     
 
    
