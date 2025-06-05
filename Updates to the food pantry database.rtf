@@ -1,0 +1,203 @@
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang2057{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil Calibri;}{\f2\fnil\fcharset1 Segoe UI Symbol;}{\f3\fnil\fcharset1 Cambria Math;}{\f4\fnil\fcharset0 Cambria Math;}{\f5\fnil\fcharset2 Symbol;}}
+{\*\generator Riched20 10.0.19041}{\*\mmathPr\mmathFont3\mwrapIndent1440 }\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\qc\b\f0\fs22\lang9 UPDATES TO THE FOOD PANTRY DATABASE\b0\par
+
+\pard\sa200\sl276\slmult1\par
+\b TRIGGERS\par
+\b0 05/6/2025 - Amended the trigger to update stock levels after issuing a food parcel.\par
+The original trigger was checking NEW.food_parcel_id = v_food_parcel_id twice\f1\emdash once for updating total_food_parcels_issued and again for total_food_parcels_remaining. \par
+IF NEW.food_parcel_id = v_food_parcel_id THEN\par
+    UPDATE food_parcels_for_issue\par
+    SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued)\par
+    WHERE food_parcel_id = v_food_parcel_id; \par
+END IF;\par
+\par
+IF NEW.food_parcel_id = v_food_parcel_id THEN\par
+    UPDATE food_parcels_for_issue\par
+    SET total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)\par
+    WHERE food_parcel_id = v_food_parcel_id; \par
+END IF;\par
+\f0\lang2057\par
+\b\lang9 05/6/2025 \b0\lang2057 M\f1\lang9 erge\f0\lang2057 d\f1\lang9  the\f0\lang2057  above \f1\lang9 updates into a single UPDATE statement to \f0\lang2057 remove redundant code and \f1\lang9 streamline the logic.\par
+\f0 IF NEW.food_parcel_id = v_food_parcel_id THEN\par
+    UPDATE food_parcels_for_issue\par
+    SET total_food_parcels_issued = total_food_parcels_issued + NEW.amount_issued,\par
+        total_food_parcels_remaining = total_food_parcels_remaining - NEW.amount_issued\par
+    WHERE food_parcel_id = v_food_parcel_id; \par
+END IF;\par
+\par
+This way, the database only performs one UPDATE operation instead of two, improving efficiency while maintaining the same logic.\par
+\par
+\b CONCURRENCY CONTROLS \par
+\b0 Concurrency issues arise when multiple transactions try to access or modify the same data at the same time, leading to potential inconsistencies\f1\emdash this is called a race condition.\par
+For example, imagine two people issuing a food parcel at the same time. If your database doesn't handle concurrency well, both transactions might read the same stock level, update it independently, and overwrite each other, causing incorrect totals.\par
+To prevent this, you can use locking or transaction control techniques, such as:\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 Row-level locking (SELECT ... FOR UPDATE): Ensures only one transaction can modify a row at a time.\par
+{\pntext\f5\'B7\tab}Optimistic locking: Uses version numbers or timestamps to detect conflicts before committing changes.\par
+
+\pard\sa200\sl276\slmult1\b\f0 05/6/2025 \b0 - Added \f1 FOR UPDATE\f0\lang2057 ; for \lang9 concurrency controls. This locks the row before updating preventing race conditions when multiple transactions try to update the same food parcel. This ensures stock levels remain accurate even when multiple transactions happen simultaneously. \par
+\b 05/6/2025 \b0 - Added Timeout (SET innodb_lock_wait_timeout = 5;)\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Prevents long waits when a row is locked by another transaction, reducing the risk of deadlocks.\par
+{\pntext\f5\'B7\tab}This ensures that if a transaction can't acquire a lock within 5 seconds, it fails instead of waiting indefinitely.\par
+
+\pard\sa200\sl276\slmult1\b 05/6/2025 \b0 - Implemented Error Handling (DECLARE EXIT HANDLER FOR SQLEXCEPTION / SQLSTATE '40001')\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Ensures failures like deadlocks or unexpected errors don\f1\rquote\f0 t corrupt data.\par
+{\pntext\f5\'B7\tab}If a deadlock (SQLSTATE '40001') or another error occurs, the system triggers an error message instead of allowing faulty updates.\par
+
+\pard\sa200\sl276\slmult1\b 05/6/2025 \b0 - Replaced Hardcoded IDs such as FP01 with NEW.food_parcel_id\par
+Allows the trigger to dynamically handle any food parcel, instead of being limited to one (FP01).\par
+NEW.food_parcel_id pulls the ID directly from the newly inserted row, making the trigger work for all food parcels without extra triggers.\par
+\par
+Here\f1\rquote\f0 s a good approach:\par
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel;\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel\par
+AFTER INSERT ON members_issued_food_parcels\par
+FOR EACH ROW\par
+BEGIN\par
+    -- Declare variables FIRST\par
+    DECLARE v_food_parcel_id VARCHAR(20);\par
+   \par
+    -- Declare error handlers for rollback\par
+    DECLARE EXIT HANDLER FOR SQLSTATE '40001'\par
+    BEGIN\par
+        SIGNAL SQLSTATE '45000' \par
+        SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';\par
+    END;\par
+\par
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION\par
+    BEGIN\par
+        SIGNAL SQLSTATE '45000' \par
+        SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';\par
+    END; \par
+    \par
+    -- Set timeout to avoid long waits for locks\par
+    SET innodb_lock_wait_timeout = 5; \par
+\par
+    -- Lock the correct row before updating  \par
+    SELECT food_parcel_id INTO v_food_parcel_id \par
+    FROM food_parcels_for_issue \par
+    WHERE food_parcel_id = NEW.food_parcel_id\par
+    FOR UPDATE;\par
+\par
+    -- Ensure we're updating the correct parcel\par
+    IF NEW.food_parcel_id = v_food_parcel_id THEN\par
+        UPDATE food_parcels_for_issue\par
+        SET total_food_parcels_issued = total_food_parcels_issued + NEW.amount_issued,\par
+            total_food_parcels_remaining = total_food_parcels_remaining - NEW.amount_issued\par
+        WHERE food_parcel_id = v_food_parcel_id; \par
+    END IF;\par
+    \par
+END $$\par
+DELIMITER ;\par
+\par
+\b Why It Works:\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1\b0 FOR UPDATE locks the row, preventing other transactions from changing it until the trigger completes.\par
+{\pntext\f5\'B7\tab}Reduces race conditions, ensuring your stock levels remain accurate.\par
+{\pntext\f5\'B7\tab}Error handling (DECLARE EXIT HANDLER) ensures deadlocks and unexpected errors don\f1\rquote\f0 t disrupt updates.\par
+{\pntext\f5\'B7\tab}\par
+
+\pard\sa200\sl276\slmult1\b Key Additions:\par
+\b0\f2\lang2057\u9989?\f1  \f0 FOR UPDATE; \f3\u8594?\f1  \f0 Locks the row, preventing other transactions from modifying \lang9 until this one is done.\par
+\f2\u9989?\f1  \f0 DECLARE EXIT HANDLER FOR SQLEXCEPTION \f3\u8594? Handles errors without rollback, ensuring failed transactions don't corrupt data.\f0\lang9\par
+\par
+\b\lang9 Why Use This?\par
+Ensures data consistency \b0\f3\u8594? Prevents incomplete updates from causing discrepancies in food parcel stock levels.\par
+\b Reduces race conditions \b0\u8594? Other transactions must wait until this one completes before making changes.\par
+\b Improves stability \b0\u8594? Transactions no longer hang indefinitely due to deadlocks, increasing system reliability.\par
+This refined version keeps your database efficient, avoids concurrency issues, and ensures smooth execution!\par
+\f0\lang9\par
+\b HOW TO TELL IF A DATABASE SUPPORTS TRANSACTIONS?\par
+\b0 MySQL:\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 InnoDB supports transactions.\par
+{\pntext\f5\'B7\tab}MyISAM does not support transactions.\par
+
+\pard\sa200\sl276\slmult1\par
+Run this command to check\par
+SHOW TABLE STATUS WHERE Name = 'your_table_name';\par
+If Engine is InnoDB, transactions are supported.\par
+\par
+\b ROLL BACKS AND COMMIT\b0\par
+MySQL triggers do not support rollback, but stored procedures do. If a failure occurs, the stored procedure can undo all changes, preventing data corruption.\par
+\par
+\b 05/6/2025 - \b0 improved the trigger functionality by wrapping its logic inside a stored procedure, allowing rollback to be performed in case of errors THEN using a trigger to call the stored procedure. Instead of handling stock updates directly in the trigger, the trigger calls the stored procedure, making the system more reliable and scalable.\par
+\par
+\b Step-by-Step Execution\b0\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 The trigger fires automatically when a \b new laptop or food parcel entry \b0 is added to incoming_laptop_computers, incoming_food_parcels or any other appropriate tables that store food parcel and laptop quantities.\par
+{\pntext\f5\'B7\tab}The trigger calls the stored procedure, passing \b the laptop ID or food parcel ID \b0 along with the received quantity, ensuring stock levels are updated correctly for both items.\par
+{\pntext\f5\'B7\tab}The stored procedure begins execution and starts a transaction, ensuring all updates happen as a single unit.\par
+{\pntext\f5\'B7\tab}A timeout is set (SET innodb_lock_wait_timeout = 5;) to prevent delays if another transaction is locking the row.\par
+{\pntext\f5\'B7\tab}Row locking (FOR UPDATE) ensures that only one transaction can modify stock levels at a time.\par
+{\pntext\f5\'B7\tab}The stock levels update, increasing total_laptops_remaining by the newly received laptop quantity.\par
+{\pntext\f5\'B7\tab}If an error occurs, the procedure triggers rollback (ROLLBACK;), ensuring faulty updates do not persist, and raises a custom error message (SIGNAL SQLSTATE '45000').\par
+{\pntext\f5\'B7\tab}If no errors occur, the transaction is committed (COMMIT;), finalizing all stock updates safely.\par
+
+\pard\sa200\sl276\slmult1\b Why This Approach Works Well\b0\par
+
+\pard{\pntext\f5\'B7\tab}{\*\pn\pnlvlblt\pnf5\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Enables rollback \f3\u8594? Prevents data corruption by undoing faulty transactions when errors occur. If a deadlock or unexpected error happens, the procedure reverses all updates instead of leaving the database in an inconsistent state.\par
+{\pntext\f5\'B7\tab}More reliable stock updates \u8594? Ensures transactions fully complete, avoiding partial or incomplete updates that could cause discrepancies.\par
+{\pntext\f5\'B7\tab}Efficient row locking (FOR UPDATE;) \u8594? Prevents race conditions when multiple transactions try updating stock simultaneously, ensuring smooth execution.\par
+{\pntext\f5\'B7\tab}Lightweight trigger \u8594? The trigger only calls the procedure, instead of managing transactions directly, making maintenance easier and reducing complexity.\par
+{\pntext\f5\'B7\tab}Ensures data integrity \u8594? Prevents incomplete updates from affecting stock levels by committing changes only when all conditions are met.\par
+{\pntext\f5\'B7\tab}Improves error handling \u8594? Allows MySQL to properly manage failures, ensuring database consistency without corruption.\par
+{\pntext\f5\'B7\tab}Optimizes execution \u8594? The combination of rollback, timeout settings, and transaction control ensures safe, efficient, and scalable concurrency handling.\par
+
+\pard\sa200\sl276\slmult1 This approach strengthens the reliability of stock updates, prevents inconsistencies, and keeps operations running smoothly.\par
+\par
+\b\f4\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due by adding local variables:\par
+\b0\f3     -- Declare local variables\par
+    DECLARE v_amount_issued INT;\par
+    DECLARE v_date_last_issued DATE;\par
+\par
+  -- Assign default values if NULL\par
+    SET v_amount_issued = IFNULL(p_amount_issued, 1);\par
+    SET v_date_last_issued = IFNULL(p_date_last_issued, CURDATE());\par
+\par
+Declaring local variables like v_amount_issued and v_date_last_issued is important because MySQL does not allow modifications to IN parameters directly.\par
+\par
+Without local variables, when you try to do:\par
+SET amount_issued = IFNULL(amount_issued, 1);\par
+MySQL may not correctly assign the new value because IN parameters are read-only inside a stored procedure.\par
+\par
+Why Local Variables Help\par
+Ensures proper assignment \u8594? Local variables allow you to store modified values without restrictions.\par
+Prevents unexpected behavior \u8594? If MySQL treats IN parameters as read-only, calculations or updates could fail.\par
+Improves clarity \u8594? Using local variables makes debugging and future modifications easier.\par
+By declaring v_amount_issued and v_date_last_issued, you ensure the procedure correctly assigns default values before inserting data.\par
+\par
+\b\f4\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due as shown below \b0 :The updated stored procedure now includes several improvements to enhance data integrity, transaction control, and stock validation before issuing a food parcel.\b\par
+ADDED\par
+Error Handling (DECLARE EXIT HANDLER FOR SQLEXCEPTION)\par
+\b0 Captures unexpected errors during execution.\par
+Triggers a rollback if an error occurs, preventing incomplete transactions.\par
+Raises a custom error message (SIGNAL SQLSTATE '45000').\par
+\par
+\b Transaction Control (START TRANSACTION and COMMIT)\par
+\b0 Ensures all operations execute as a single unit.\par
+If successful, commits the transaction finalizing all changes.\par
+If an error occurs, rolls back to undo changes, preventing faulty data from being saved.\par
+\par
+\b Stock Check Before Issuing Parcels\par
+\b0 Queries available stock (SELECT total_food_parcels_remaining) before proceeding.\par
+If stock is insufficient, it triggers an error and rolls back the transaction.\par
+Prevents issuing more food parcels than available inventory.\par
+\par
+\b Row Locking (FOR UPDATE)\b0\par
+Ensures stock levels cannot be modified by multiple transactions at the same time.\par
+Prevents race conditions when several users try issuing food parcels simultaneously.\par
+\par
+\b Deducting Issued Amount After Confirmation\par
+\b0 After verifying stock, the procedure reduces the total available food parcels (UPDATE food_parcels_for_issue).\par
+Ensures accurate stock tracking only after a successful issuance.\f3\par
+\f0\lang9\par
+\par
+}
+ 
