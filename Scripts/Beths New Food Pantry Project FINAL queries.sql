@@ -172,9 +172,10 @@ SELECT
     date_last_issued AS date_last_collected_a_food_parcel,
     days_since_last_issue AS days_since_last_collection,
     next_issue_due_date AS date_due_for_next_collection,
-    IF((date_last_issued IS NULL) OR (days_since_last_issue >= 7), 'YES', 
+    IF((date_last_issued IS NULL) OR (days_since_last_issue >= 7), 'YES, issue a food parcel', 
        CONCAT('NO. Please come back on or after ', next_issue_due_date)) AS Issue_a_food_parcel_today_or_Not
-FROM View_members_Issued_or_Not_issued_with_food_parcels;
+FROM View_members_Issued_or_Not_issued_with_food_parcels
+ORDER BY members_name ASC;
 
       
 SELECT * FROM View_members_due_or_not_due_for_food_parcels;
@@ -246,7 +247,7 @@ WHERE members_name LIKE '%MOHAMED SELADIN%' && member_id = 'M06';
 ADVANCED Q1). IN YOUR DATABASE, CREATE a stored procedure AND DEMONSTRATE HOW IT RUNS
 -- ==============================================================================================================================
 -- STORED PROCEDURE TO ISSUE A FOOD PARCEL
-
+/*
 DROP PROCEDURE IF EXISTS Sproc_issue_a_FOOD_parcel_IF_one_is_due
 
 DELIMITER $$
@@ -261,6 +262,7 @@ BEGIN
 	(member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued);
 END $$
 DELIMITER ;
+*/
 
 
 -- ==============================================================================================================================
@@ -272,7 +274,7 @@ ADVANCED Q2). IN YOUR DATABASE, CREATE A trigger AND DEMONSTRATE HOW IT RUNS - D
  AFTER a NORMAL DIET (FPO1) FOOD PARCEL IS ISSUED TO A MEMBER
 
 -- ==============================================================
-
+/*
 DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel
 
 DELIMITER $$
@@ -294,7 +296,7 @@ BEGIN
     END IF;
 END $$
 DELIMITER ;
-    
+*/
 -- ==============================================================
 
 
@@ -309,8 +311,8 @@ THE TRIGGER WILL AUTOMATICALLY UPDATE THE FOOD PARCELS STOCK LEVELS ON the FOOD 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M07', 'FP01', 'WAL02', CURDATE(), 1); 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M09', 'FP02', 'WAL02', CURDATE(), 1); 
 CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M10', 'FP03', 'DUD02', CURDATE(), 1); 
-CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M08', 'FP05', 'BCC01', CURDATE(), 1); 
-CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M12', 'FP04', 'ERD01', CURDATE(), 1);
+CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M05', 'FP05', 'DUD02', CURDATE(), 1); 
+CALL Sproc_issue_a_FOOD_parcel_IF_one_is_due ('M01', 'FP06', 'DUD02', CURDATE(), 1);
 
 SELECT * FROM beths_new_food_pantry.food_parcels_for_issue;    
 
@@ -328,10 +330,31 @@ ORDER BY Issue_a_food_parcel_or_Not DESC, member_id;
 
 
 
-*********************************************************    THE END  ************************************************************
+-- *********************************************************    THE END  ************************************************************
+-- A MySQL VIEW SHOWING MEMBERS FULL DETAILS
+
+CREATE OR REPLACE VIEW View_member_full_details AS
+	SELECT 
+		mpd.member_id,
+		CONCAT(mpd.first_name, ' ', mpd.last_name) AS members_name,
+		mpd.age_range,
+		mpd.dependants_under_18,
+		mpd.main_contact_number,
+		mpd.email_address,
+		ma.house_number,
+		ma.street_name,
+		ma.city_or_town,
+		ma.post_code
+	FROM beths_new_food_pantry.members_personal_details mpd
+	JOIN (
+		SELECT address_id, house_number, street_name, city_or_town, post_code
+		FROM beths_new_food_pantry.members_address
+	) ma ON mpd.address_id = ma.address_id;
 
 
-
+-- A MySQL VIEW SHOWING MEMBERS ADDRESS AND CONTACT DETAILS
+CREATE OR REPLACE VIEW View_member_address_and_contact AS
+	SELECT * FROM View_member_full_details;
 
 
 

@@ -7,63 +7,58 @@ USE beths_new_food_pantry;
 
 -- Stored procedure and trigger for automatically updating food parcel stock levels after ISSUING ANY TYPE OF FOOD parcel
 
+DROP PROCEDURE IF EXISTS SP_update_food_parcels_stock_AFTER_ISSUING_food_parcels;
 
 DELIMITER $$
 
-CREATE PROCEDURE SP_update_food_parcels_stock_levels_AFTER_issuing_ANY_food_parcel (
+CREATE PROCEDURE SP_update_food_parcels_stock_AFTER_ISSUING_food_parcels(
     IN p_food_parcel_id VARCHAR(20), 
     IN p_amount_issued INT
 )
+
 BEGIN
-    -- Declare error handlers for rollback
+    -- Declare variables
+    DECLARE dummy_var VARCHAR(20);
+    
+    -- Declare error handlers (without rollback)
     DECLARE EXIT HANDLER FOR SQLSTATE '40001'
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';
+        SET MESSAGE_TEXT = 'Deadlock detected: Operation stopped.';
     END;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
-        ROLLBACK;
         SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';
+        SET MESSAGE_TEXT = 'Unexpected error occurred.';
     END;
     
-    -- Set timeout to avoid long waits for locks
-    SET innodb_lock_wait_timeout = 5; 
-    
-    -- Start transaction explicitly
-    START TRANSACTION;
-
-    -- Lock the correct row before updating
-    SELECT food_parcel_id 
-    FROM food_parcels_for_issue 
+    -- Lock row before updating
+    SELECT food_parcel_id INTO dummy_var
+    FROM food_parcels_for_issue
     WHERE food_parcel_id = p_food_parcel_id
     FOR UPDATE;
-
-    -- Perform the update after locking
+       
+    -- Perform the update
     UPDATE food_parcels_for_issue
     SET total_food_parcels_issued = total_food_parcels_issued + p_amount_issued,
         total_food_parcels_remaining = total_food_parcels_remaining - p_amount_issued
     WHERE food_parcel_id = p_food_parcel_id;
-
-    -- Commit if everything runs successfully
-    COMMIT;
     
 END $$
 
 DELIMITER ;
-
 -- ==============================================================================================================================
 -- Trigger to Call the ABOVE Stored Procedure
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_ISSUING_food_parcels;
+
 DELIMITER $$
 
-CREATE TRIGGER TR_update_food_parcels_stock_levels_AFTER_issuing_ANY_food_parcel
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_ISSUING_food_parcels
 AFTER INSERT ON members_issued_food_parcels
 FOR EACH ROW
 BEGIN
-    CALL SP_update_food_parcels_stock_levels_AFTER_issuing_ANY_food_parcel(NEW.food_parcel_id, NEW.amount_issued);
+    CALL SP_update_food_parcels_stock_AFTER_ISSUING_food_parcels(NEW.food_parcel_id, NEW.amount_issued);
 END $$
 
 DELIMITER ;
@@ -72,9 +67,11 @@ DELIMITER ;
 -- ==============================================================================================================================
 -- Stored procedure and trigger for automatically updating food parcel stock levels after receiving more parcels, ensuring rollback capabilities and dynamic row locking:
 
+DROP PROCEDURE IF EXISTS SP_update_food_parcels_stock_AFTER_receiving_food_parcels;
+
 DELIMITER $$
 
-CREATE PROCEDURE SP_update_food_parcels_stock_levels_AFTER_receiving_ANY_type_of_food_parcels (
+CREATE PROCEDURE SP_update_food_parcels_stock_AFTER_receiving_food_parcels (
     IN p_food_parcel_id VARCHAR(20), 
     IN p_amount_received INT
 )
@@ -106,6 +103,7 @@ BEGIN
     WHERE food_parcel_id = p_food_parcel_id
     FOR UPDATE;
 
+
     -- Perform the update after locking
     UPDATE food_parcels_for_issue
     SET total_food_parcels_remaining = total_food_parcels_remaining + p_amount_received
@@ -122,26 +120,29 @@ DELIMITER ;
 -- ==============================================================================================================================
 
 -- Trigger to Call the ABOVE Stored Procedure
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_RECEIVING_food_parcels;
+
 DELIMITER $$
 
-CREATE TRIGGER TR_update_food_parcels_stock_levels_AFTER_receiving_ANY_type_of_food_parcel
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_RECEIVING_food_parcels
 AFTER INSERT ON incoming_food_parcels
 FOR EACH ROW
 BEGIN
-    CALL SP_update_food_parcels_stock_levels_AFTER_receiving_ANY_type_of_food_parcels(NEW.food_parcel_id, NEW.amount_of_food_parcels_received);
+    CALL SP_update_food_parcels_stock_AFTER_receiving_food_parcels(NEW.food_parcel_id, NEW.amount_of_food_parcels_received);
 END $$
 
 DELIMITER ;
 
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_RECEIVING_food_parcels;
 
 
 -- ==============================================================================================================================
 -- Stored procedure and trigger for updating laptop stock levels after ISSUING new laptops while ensuring rollback capabilities and dynamic row locking:
-
+DROP PROCEDURE IF EXISTS SP_update_laptop_computers_stock_AFTER_ISSUING_laptops;
 
 DELIMITER $$
 
-CREATE PROCEDURE SP_update_laptop_computers_stock_levels_AFTER_ISSUING_ANY_laptop (
+CREATE PROCEDURE SP_update_laptop_computers_stock_AFTER_ISSUING_laptops (
     IN p_laptop_computer_id VARCHAR(20), 
     IN p_amount_issued INT
 )
@@ -188,21 +189,26 @@ DELIMITER ;
 
 -- ==============================================================================================================================
 -- Trigger to Call the ABOVE Stored Procedure
+DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_AFTER_ISSUING_laptops;
+
 DELIMITER $$
-CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_ISSUING_ANY_laptop
+CREATE TRIGGER TR_update_laptop_computers_stock_AFTER_ISSUING_laptops
 AFTER INSERT ON members_issued_laptop_computers
 FOR EACH ROW
 BEGIN
-    CALL SP_update_laptop_computers_stock_levels_AFTER_ISSUING_ANY_laptop(NEW.laptop_computer_id, NEW.amount_issued);
+    CALL SP_update_laptop_computers_stock_AFTER_ISSUING_laptops(NEW.laptop_computer_id, NEW.amount_issued);
 END $$
-DELIMITER;
+
+DELIMITER ;
 
 
 -- ==============================================================================================================================
 -- Stored procedure and trigger for updating laptop stock levels after RECEIVING new laptops while ensuring rollback capabilities and dynamic row locking:
+DROP PROCEDURE IF EXISTS SP_update_laptop_computers_stock_AFTER_RECEIVING_laptops;
+
 DELIMITER $$
 
-CREATE PROCEDURE SP_update_laptop_computers_stock_levels_AFTER_RECEIVING_more_laptops (
+CREATE PROCEDURE SP_update_laptop_computers_stock_AFTER_RECEIVING_laptops (
     IN p_laptop_computer_id VARCHAR(20), 
     IN p_amount_received INT
 )
@@ -248,14 +254,15 @@ DELIMITER ;
 
 -- ==============================================================================================================================
 -- Trigger to Call the ABOVE Stored Procedure
+DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_AFTER_RECEIVING_laptops;
 
 DELIMITER $$
 
-CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_RECEIVING_ANY_laptop
+CREATE TRIGGER TR_update_laptop_computers_stock_AFTER_RECEIVING_laptops
 AFTER INSERT ON incoming_laptop_computers
 FOR EACH ROW
 BEGIN
-    CALL SP_update_laptop_computers_stock_levels_AFTER_RECEIVING_more_laptops(NEW.laptop_computer_id, NEW.amount_of_laptops_received);
+    CALL SP_update_laptop_computers_stock_AFTER_RECEIVING_laptops(NEW.laptop_computer_id, NEW.amount_of_laptops_received);
 END $$
 
 DELIMITER ;
@@ -267,6 +274,8 @@ DELIMITER ;
 -- 
 -- ==============================================================================================================================
 
+/*
+-- 01/10/2025 this trigger does not exist for now
 DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_ANY_type_of_food_parcel;
 
 DELIMITER $$
@@ -312,230 +321,165 @@ END $$
 
 DELIMITER ;
 
-
+*/
 
 
 -- ==============================================================================================================================
 -- a TRIGGER which AUTOMATICALLY updates the NORMAL DIET FOOD (FP01) PARCELS STOCK LEVELS after issuing A NORMAL DIET FOOD PARCEL 
 -- ==============================================================================================================================
 
+/*
+ DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel
+AFTER INSERT ON members_issued_food_parcels
+FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Set timeout to avoid long waits for locks. Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5; 
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel
--- AFTER INSERT ON members_issued_food_parcels
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Set timeout to avoid long waits for locks. Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5; 
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP01'
+    FOR UPDATE;
+     
+    -- Perform the update   
+	IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP01'
---     FOR UPDATE;
---      
---     -- Perform the update   
--- 	IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
--- 			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
---     
--- END $$
-
--- DELIMITER ;
---     
+DELIMITER ;
+*/     
 -- -- ==============================================================================================================================
 -- -- A TRIGGER which AUTOMATICALLY updates the HALAL FOOD (FP02) PARCELS STOCK LEVELS after issuing A HALAL FOOD PARCEL 
 -- -- ==============================================================================================================================
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_HALAL_diet_food_parcel
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_HALAL_diet_food_parcel
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_HALAL_diet_food_parcel
--- AFTER INSERT ON members_issued_food_parcels
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5; 
---     
---     -- Start transaction
---     START TRANSACTION;
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_HALAL_diet_food_parcel
+AFTER INSERT ON members_issued_food_parcels
+FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5; 
+    
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP02'
+    FOR UPDATE;
+    
+    -- Perform the update
+	IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;  
+    
+END $$
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP02'
---     FOR UPDATE;
---     
---     -- Perform the update
--- 	IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
--- 			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
-
---     -- Commit the transaction to finalize changes
---     COMMIT;    
---     
--- END $$
-
--- DELIMITER ;
---     
---     
+DELIMITER ;
+*/    
+    
 -- -- ===============================================================================================================================
 
 -- -- a TRIGGER which AUTOMATICALLY updates the NORMAL DIABETIC FOOD (FP03) PARCELS STOCK LEVELS after issuing
 -- -- A NORMAL DIABETIC FOOD PARCEL  
 
 -- -- ===============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_food_stock_AFTER_issue_NORMAL_DIABETIC_diet_food
 
--- DROP TRIGGER IF EXISTS TR_update_food_stock_AFTER_issue_NORMAL_DIABETIC_diet_food
+DELIMITER $$
+CREATE TRIGGER TR_update_food_stock_AFTER_issue_NORMAL_DIABETIC_diet_food
+AFTER INSERT ON members_issued_food_parcels
+FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
+    
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP03'
+    FOR UPDATE;
+    
+	IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued), 
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_stock_AFTER_issue_NORMAL_DIABETIC_diet_food
--- AFTER INSERT ON members_issued_food_parcels
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
-
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP03'
---     FOR UPDATE;
---     
--- 	IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued), 
--- 			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
-
---     -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
-
--- DELIMITER ;
---     
-
+DELIMITER ;
+*/
 -- -- ===============================================================================================================================
 -- -- a TRIGGER which AUTOMATICALLY updates the VEGAN FOOD (FP04) PARCELS STOCK LEVELS after issuing A VEGAN FOOD PARCEL 
 -- -- ===============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_VEGAN_food_parcel
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_VEGAN_food_parcel
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_VEGAN_food_parcel
+AFTER INSERT ON members_issued_food_parcels
+FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
+    
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP04'
+    FOR UPDATE;    
+    
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_VEGAN_food_parcel
--- AFTER INSERT ON members_issued_food_parcels
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
-
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP04'
---     FOR UPDATE;    
---     
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
--- 			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
---     
---     -- Commit the transaction to finalize changes
---     COMMIT;    
---     
--- END $$
-
--- DELIMITER ;
-
+DELIMITER ;
+*/
 -- -- =============================================================================================================================
 
 -- -- a TRIGGER which AUTOMATICALLY updates the VEGETARIAN FOOD (FP05) PARCELS STOCK LEVELS after issuing A
 -- VEGETARIAN FOOD PARCEL 
 
 -- -- =============================================================================================================================
-
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_VEGETARIAN_food_parcel
-
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_VEGETARIAN_food_parcel
--- AFTER INSERT ON members_issued_food_parcels
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
-
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP05'
---     FOR UPDATE;    
---     
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
--- 			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
---     
---     -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
-
--- DELIMITER ;
-
-
-
--- -- =======================================================================================================================  THIS ONE IS WORKING PERFECTLY
--- 						**** TRIGGERS AFTER INCOMING FOOD PARCELS  ****************
--- -- =======================================================================================================================  THIS ONE IS WORKING PERFECTLY
-
--- - a TRIGGER which AUTOMATICALLY updates the NORMAL DIET (FP01) FOOD PARCELS STOCK LEVELS
--- AFTER RECEIVING MORE NORMAL DIET FOOD PARCELS
-
--- -- =======================================================================================================================
-
-DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_NORMAL_DIET_foods
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_VEGETARIAN_food_parcel
 
 DELIMITER $$
-CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_NORMAL_DIET_foods
-AFTER INSERT ON incoming_food_parcels
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_VEGETARIAN_food_parcel
+AFTER INSERT ON members_issued_food_parcels
 FOR EACH ROW
 BEGIN
 	DECLARE v_food_parcel_id VARCHAR (20);
@@ -550,6 +494,50 @@ BEGIN
     SELECT food_parcel_id
     INTO v_food_parcel_id
     FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP05'
+    FOR UPDATE;    
+    
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_issued = (total_food_parcels_issued + NEW.amount_issued),
+			total_food_parcels_remaining = (total_food_parcels_remaining - NEW.amount_issued)
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+    -- Commit the transaction to finalize changes
+    COMMIT;
+    
+END $$
+
+DELIMITER ;
+*/
+
+
+-- -- =======================================================================================================================  THIS ONE IS WORKING PERFECTLY
+-- 						**** TRIGGERS AFTER INCOMING FOOD PARCELS  ****************
+-- -- =======================================================================================================================  THIS ONE IS WORKING PERFECTLY
+
+-- - a TRIGGER which AUTOMATICALLY updates the NORMAL DIET (FP01) FOOD PARCELS STOCK LEVELS
+-- AFTER RECEIVING MORE NORMAL DIET FOOD PARCELS
+
+-- -- =======================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_NORMAL_DIET_foods
+
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_NORMAL_DIET_foods
+AFTER INSERT ON incoming_food_parcels
+FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
+
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
     WHERE food_parcel_id = 'FP01'
     FOR UPDATE;    
     
@@ -558,143 +546,125 @@ BEGIN
 		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
 		WHERE food_parcel_id = v_food_parcel_id; 
     END IF;
-    
-    -- Commit the transaction to finalize changes
-    COMMIT;    
-    
+       
 END $$
 
 DELIMITER ;
-
+*/
 
 -- -- =======================================================================================================================  THIS ONE IS WORKING PERFECTLY
 
 -- - Create a TRIGGER which AUTOMATICALLY updates the HALAL (FP02) FOOD PARCELS STOCK LEVELS AFTER RECEIVING MORE HALAL FOODS
 
 -- -- =======================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_HALAL_foods
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_HALAL_foods
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_HALAL_foods
+AFTER INSERT ON incoming_food_parcels
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_HALAL_foods
--- AFTER INSERT ON incoming_food_parcels
+FOR EACH ROW
 
--- FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
 
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP02'
+    FOR UPDATE;    
+	
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP02'
---     FOR UPDATE;    
--- 	
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
-
---     -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
-
--- DELIMITER ;
+DELIMITER ;
+*/
 
 
 -- -- ==============================================================================================================================
 -- - Create a TRIGGER which AUTOMATICALLY updates the NORMAL DIABETIC (FP03) FOOD PARCELS STOCK LEVELS AFTER RECEIVING MORE NORMAL DIABETIC FOODS
 -- -- ==============================================================================================================================
 
--- DROP TRIGGER IF EXISTS TR_update_food_stock_AFTER_receiving_NORMAL_DIABETIC_food
+/*
+DROP TRIGGER IF EXISTS TR_update_food_stock_AFTER_receiving_NORMAL_DIABETIC_food
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_stock_AFTER_receiving_NORMAL_DIABETIC_food
--- AFTER INSERT ON incoming_food_parcels
+DELIMITER $$
+CREATE TRIGGER TR_update_food_stock_AFTER_receiving_NORMAL_DIABETIC_food
+AFTER INSERT ON incoming_food_parcels
 
--- FOR EACH ROW
+FOR EACH ROW
 
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP03'
---     FOR UPDATE;    
--- 	
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
---  
---      -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP03'
+    FOR UPDATE;    
+	
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
--- DELIMITER ;
-
+DELIMITER ;
+*/
 
 -- -- ==============================================================================================================================
 -- - Create a TRIGGER which AUTOMATICALLY updates the VEGAN (FP04) FOOD PARCELS STOCK LEVELS AFTER RECEIVING MORE VEGAN FOODS
 -- -- ==============================================================================================================================
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_VEGAN_foods
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_VEGAN_foods
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_VEGAN_foods
--- AFTER INSERT ON incoming_food_parcels
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_VEGAN_foods
+AFTER INSERT ON incoming_food_parcels
 
--- FOR EACH ROW
+FOR EACH ROW
 
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP04'
---     FOR UPDATE;    
--- 	
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
---     
---     -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP04'
+    FOR UPDATE;    
+	
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF;
+    
+END $$
 
--- DELIMITER ;
-
---     
+DELIMITER ;
+*/
+     
 -- SELECT * FROM beths_new_food_pantry.incoming_food_parcels;
 -- SELECT * FROM beths_new_food_pantry.food_parcels_for_issue;
 
@@ -703,146 +673,140 @@ DELIMITER ;
 -- -- ==============================================================================================================================
 -- - Create a TRIGGER which AUTOMATICALLY updates the HALAL (FP05) FOOD PARCELS STOCK LEVELS AFTER RECEIVING MORE VEGETARIAN FOODS
 -- -- ==============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_VEGETARIAN_foods
 
--- DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_receiving_VEGETARIAN_foods
+DELIMITER $$
+CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_VEGETARIAN_foods
+AFTER INSERT ON incoming_food_parcels
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_food_parcels_stock_AFTER_receiving_VEGETARIAN_foods
--- AFTER INSERT ON incoming_food_parcels
+FOR EACH ROW
 
--- FOR EACH ROW
+BEGIN
+	DECLARE v_food_parcel_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
 
--- BEGIN
--- 	DECLARE v_food_parcel_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
+    -- Lock the specific row for update    
+    SELECT food_parcel_id
+    INTO v_food_parcel_id
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = 'FP05'
+    FOR UPDATE;    
+	
+    IF NEW.food_parcel_id = v_food_parcel_id THEN
+		UPDATE food_parcels_for_issue
+		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
+		WHERE food_parcel_id = v_food_parcel_id; 
+    END IF; 
+    
+END $$
 
---     -- Lock the specific row for update    
---     SELECT food_parcel_id
---     INTO v_food_parcel_id
---     FROM food_parcels_for_issue
---     WHERE food_parcel_id = 'FP05'
---     FOR UPDATE;    
--- 	
---     IF NEW.food_parcel_id = v_food_parcel_id THEN
--- 		UPDATE food_parcels_for_issue
--- 		SET total_food_parcels_remaining = total_food_parcels_remaining + NEW.amount_of_food_parcels_received  
--- 		WHERE food_parcel_id = v_food_parcel_id; 
---     END IF;
-
---     -- Commit the transaction to finalize changes
---     COMMIT;    
---     
--- END $$
-
--- DELIMITER ;
-
+DELIMITER ;
+*/
 
 
 -- -- ==============================================================================================================================
 -- 					*********************************	TRIGGERS FOR LAPTOPS ********************************
 -- -- ==============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_laptop_computer_stock_AFTER_receiving_MORE_laptops;
 
--- DROP TRIGGER IF EXISTS TR_update_laptop_computer_stock_AFTER_receiving_ANY_type_of_laptop;
+DELIMITER $$
 
--- DELIMITER $$
+CREATE TRIGGER TR_update_laptop_computer_stock_AFTER_receiving_MORE_laptop
+AFTER INSERT ON incoming_laptop_computers
+FOR EACH ROW
+BEGIN
+    -- Declare variables FIRST
+    DECLARE v_laptop_computer_id VARCHAR(20);
+   
+    -- Declare error handlers for deadlocks and unexpected failures
+    DECLARE EXIT HANDLER FOR SQLSTATE '40001'
+    BEGIN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';
+    END;
 
--- CREATE TRIGGER TR_update_laptop_computer_stock_AFTER_receiving_ANY_type_of_laptop
--- AFTER INSERT ON incoming_laptop_computers
--- FOR EACH ROW
--- BEGIN
---     -- Declare variables FIRST
---     DECLARE v_laptop_computer_id VARCHAR(20);
---    
---     -- Declare error handlers for deadlocks and unexpected failures
---     DECLARE EXIT HANDLER FOR SQLSTATE '40001'
---     BEGIN
---         SIGNAL SQLSTATE '45000' 
---         SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';
---     END;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';
+    END;
 
---     DECLARE EXIT HANDLER FOR SQLEXCEPTION
---     BEGIN
---         SIGNAL SQLSTATE '45000' 
---         SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';
---     END;
+    -- Set timeout to avoid long waits for locks
+    SET innodb_lock_wait_timeout = 5; 
 
---     -- Set timeout to avoid long waits for locks
---     SET innodb_lock_wait_timeout = 5; 
+    -- Lock the correct row before updating  
+    SELECT laptop_computer_id INTO v_laptop_computer_id 
+    FROM laptop_computers_for_issue 
+    WHERE laptop_computer_id = NEW.laptop_computer_id
+    FOR UPDATE;
 
---     -- Lock the correct row before updating  
---     SELECT laptop_computer_id INTO v_laptop_computer_id 
---     FROM laptop_computers_for_issue 
---     WHERE laptop_computer_id = NEW.laptop_computer_id
---     FOR UPDATE;
+    -- Ensure we're updating the correct laptop
+    IF NEW.laptop_computer_id = v_laptop_computer_id THEN
+        UPDATE laptop_computers_for_issue
+        SET total_laptops_remaining = total_laptops_remaining + NEW.amount_of_laptops_received
+        WHERE laptop_computer_id = v_laptop_computer_id; 
+    END IF;
+    
+END $$
 
---     -- Ensure we're updating the correct laptop
---     IF NEW.laptop_computer_id = v_laptop_computer_id THEN
---         UPDATE laptop_computers_for_issue
---         SET total_laptops_remaining = total_laptops_remaining + NEW.amount_of_laptops_received
---         WHERE laptop_computer_id = v_laptop_computer_id; 
---     END IF;
---     
--- END $$
-
--- DELIMITER ;
-
+DELIMITER ;
+*/
 -- -- ==============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_levels_AFTER_issuing_ANY_laptop;
 
--- DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_levels_AFTER_issuing_ANY_type_of_laptop;
+DELIMITER $$
 
--- DELIMITER $$
+CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_issuing_ANY_laptop
+AFTER INSERT ON members_issued_laptop_computers
+FOR EACH ROW
+BEGIN
+    -- Declare variables FIRST
+    DECLARE v_laptop_computer_id VARCHAR(20);
+    
+    -- Declare error handlers for deadlocks and unexpected failures
+    DECLARE EXIT HANDLER FOR SQLSTATE '40001'
+    BEGIN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';
+    END;
 
--- CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_issuing_ANY_type_of
--- AFTER INSERT ON members_issued_laptop_computers
--- FOR EACH ROW
--- BEGIN
---     -- Declare variables FIRST
---     DECLARE v_laptop_computer_id VARCHAR(20);
---     
---     -- Declare error handlers for deadlocks and unexpected failures
---     DECLARE EXIT HANDLER FOR SQLSTATE '40001'
---     BEGIN
---         SIGNAL SQLSTATE '45000' 
---         SET MESSAGE_TEXT = 'Deadlock detected: Transaction rolled back. Try again later.';
---     END;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';
+    END;
 
---     DECLARE EXIT HANDLER FOR SQLEXCEPTION
---     BEGIN
---         SIGNAL SQLSTATE '45000' 
---         SET MESSAGE_TEXT = 'An unexpected error occurred. Transaction rolled back.';
---     END;
+    -- Set timeout to avoid long waits for locks
+    SET innodb_lock_wait_timeout = 5; 
 
---     -- Set timeout to avoid long waits for locks
---     SET innodb_lock_wait_timeout = 5; 
+    -- Lock the correct row before updating  
+    SELECT laptop_computer_id INTO v_laptop_computer_id 
+    FROM laptop_computers_for_issue 
+    WHERE laptop_computer_id = NEW.laptop_computer_id
+    FOR UPDATE;
 
---     -- Lock the correct row before updating  
---     SELECT laptop_computer_id INTO v_laptop_computer_id 
---     FROM laptop_computers_for_issue 
---     WHERE laptop_computer_id = NEW.laptop_computer_id
---     FOR UPDATE;
+    -- Ensure we're updating the correct laptop
+    IF NEW.laptop_computer_id = v_laptop_computer_id THEN
+        UPDATE laptop_computers_for_issue
+        SET total_laptops_issued = total_laptops_issued + NEW.amount_issued,
+            total_laptops_remaining = total_laptops_remaining - NEW.amount_issued
+        WHERE laptop_computer_id = v_laptop_computer_id; 
+    END IF;
+    
+END $$
 
---     -- Ensure we're updating the correct laptop
---     IF NEW.laptop_computer_id = v_laptop_computer_id THEN
---         UPDATE laptop_computers_for_issue
---         SET total_laptops_issued = total_laptops_issued + NEW.amount_issued,
---             total_laptops_remaining = total_laptops_remaining - NEW.amount_issued
---         WHERE laptop_computer_id = v_laptop_computer_id; 
---     END IF;
---     
--- END $$
-
--- DELIMITER ;
-
+DELIMITER ;
+*/
 
 
 -- ==============================================================================================================================
 
-
+/*
 - Create a TRIGGER which AUTOMATICALLY updates the LAPTOP COMPUTERS STOCK LEVELS AFTER RECEIVING MORE LAPTOPS
 
 DROP TRIGGER IF EXISTS TR_update_laptop_computer_stock_AFTER_receiving_more_laptops
@@ -873,6 +837,7 @@ BEGIN
 END $$
 
 DELIMITER ;
+*/
 
 -- SELECT * FROM beths_new_food_pantry.incoming_laptop_computers;
 -- SELECT * FROM beths_new_food_pantry.laptop_computers_for_issue;
@@ -882,48 +847,42 @@ DELIMITER ;
 -- -- ==============================================================================================================================
 -- - Create a TRIGGER which AUTOMATICALLY updates the LAPTOP COMPUTERS STOCK LEVELS AFTER ISSUING A LAPTOP TO A MEMBER
 -- -- ==============================================================================================================================
+/*
+DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_levels_AFTER_issuing_a_laptop
 
--- DROP TRIGGER IF EXISTS TR_update_laptop_computers_stock_levels_AFTER_issuing_a_laptop
+DELIMITER $$
+CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_issuing_a_laptop
+AFTER INSERT ON members_issued_laptop_computers
+FOR EACH ROW
+BEGIN
+	DECLARE v_laptop_computer_id VARCHAR (20);
+    
+    -- Wait for max 5 seconds before aborting
+    SET innodb_lock_wait_timeout = 5;     
+    
+    -- Lock the specific row for update    
+    SELECT laptop_computer_id
+    INTO v_laptop_computer_id
+    FROM laptop_computers_for_issue
+    WHERE laptop_computer_id = 'COMP01'
+    FOR UPDATE;    
+ 
+	IF NEW.laptop_computer_id = v_laptop_computer_id THEN
+		UPDATE laptop_computers_for_issue
+		SET total_laptops_issued = total_laptops_issued + NEW.amount_issued   
+		WHERE laptop_computer_id = v_laptop_computer_id;
+    END IF;
 
--- DELIMITER $$
--- CREATE TRIGGER TR_update_laptop_computers_stock_levels_AFTER_issuing_a_laptop
--- AFTER INSERT ON members_issued_laptop_computers
--- FOR EACH ROW
--- BEGIN
--- 	DECLARE v_laptop_computer_id VARCHAR (20);
---     
---     -- Wait for max 5 seconds before aborting
---     SET innodb_lock_wait_timeout = 5;     
---     
---     -- Start transaction
---     START TRANSACTION;
+	IF NEW.laptop_computer_id = v_laptop_computer_id THEN
+		UPDATE laptop_computers_for_issue
+		SET total_laptops_remaining = total_laptops_remaining - NEW.amount_issued   
+		WHERE laptop_computer_id =  v_laptop_computer_id;
+    END IF;
+   
+END $$
 
---     -- Lock the specific row for update    
---     SELECT laptop_computer_id
---     INTO v_laptop_computer_id
---     FROM laptop_computers_for_issue
---     WHERE laptop_computer_id = 'COMP01'
---     FOR UPDATE;    
---  
--- 	IF NEW.laptop_computer_id = v_laptop_computer_id THEN
--- 		UPDATE laptop_computers_for_issue
--- 		SET total_laptops_issued = total_laptops_issued + NEW.amount_issued   
--- 		WHERE laptop_computer_id = v_laptop_computer_id;
---     END IF;
-
--- 	IF NEW.laptop_computer_id = v_laptop_computer_id THEN
--- 		UPDATE laptop_computers_for_issue
--- 		SET total_laptops_remaining = total_laptops_remaining - NEW.amount_issued   
--- 		WHERE laptop_computer_id =  v_laptop_computer_id;
---     END IF;
-
---     -- Commit the transaction to finalize changes
---     COMMIT;
---     
--- END $$
-
--- DELIMITER ;
-
+DELIMITER ;
+*/
 -- SELECT * FROM beths_new_food_pantry.members_issued_laptop_computers;
 -- SELECT * FROM beths_new_food_pantry.laptop_computers_for_issue;
 
@@ -980,9 +939,12 @@ DELIMITER ;
      *********************************************** STORED PROCEDURES **************************************************
 -- ==============================================================================================================================
 
+-- ORIGINAL AND UPDATED STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH A CHECK FOR WHEN DATE AND AMOUNT ISSUED ARE NULL - ADDED 09/3/2025 - WORKING 
+-- AMMENDED 17 8 2025 TO ENSURE MEMBER ID IS ADDED WITH A CAPITAL M.
+-- DECLARE v_member_id_clean	Local variable to hold cleaned-up ID
+-- SET v_member_id_clean = ...	Capitalizes m if needed
+-- VALUES (v_member_id_clean, ...)	Uses cleaned ID in the insert
 
-
--- UPDATED STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH A CHECK FOR WHEN DATE AND AMOUNT ISSUED ARE NULL - ADDED 09/3/2025
 
 DROP PROCEDURE IF EXISTS Sproc_issue_a_FOOD_parcel_IF_one_is_due;
 
@@ -995,6 +957,7 @@ BEGIN
 -- Declare local variables
     DECLARE v_amount_issued INT;
     DECLARE v_date_last_issued DATE;
+    DECLARE v_member_id_clean VARCHAR(10); -- added 17/8/2025
     
     -- Assign default value if amount_issued is NULL
     SET v_amount_issued = IFNULL(amount_issued, 1);
@@ -1002,20 +965,84 @@ BEGIN
     -- Assign default value if date_last_issued is NULL
     SET v_date_last_issued = IFNULL(date_last_issued, CURDATE());
 
+	-- Capitalize 'm' if needed -- added 17/8/2025
+		SET v_member_id_clean = 
+			CASE 
+				WHEN LOWER(LEFT(member_id, 1)) = 'm' THEN 
+					CONCAT('M', SUBSTRING(member_id, 2))
+				ELSE member_id
+			END;
+            
     -- Insert into the table
     INSERT INTO members_issued_food_parcels
     (member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued)
     VALUES
-    (member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued);
+    (v_member_id_clean, food_parcel_id, collection_point_id, date_last_issued, amount_issued); -- changed from member_id to v_member_id_clean added 17/8/2025
 END $$
 DELIMITER ;
 
 
--- UPDATED STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH A CHECK FOR WHEN DATE AND AMOUNT ISSUED ARE NULL - ADDED 06/6/2025
+-- DROP PROCEDURE IF EXISTS Sproc_issue_a_FOOD_parcel_IF_one_is_due;
+
+-- DELIMITER $$
+-- CREATE PROCEDURE Sproc_issue_a_FOOD_parcel_IF_one_is_due
+--     (IN member_id VARCHAR(10), IN food_parcel_id VARCHAR(20),
+--      IN collection_point_id VARCHAR(10), IN date_last_issued DATE, IN amount_issued INT)
+
+-- BEGIN
+-- -- Declare local variables
+--     DECLARE v_amount_issued INT;
+--     DECLARE v_date_last_issued DATE;
+--     
+--     -- Assign default value if amount_issued is NULL
+--     SET v_amount_issued = IFNULL(amount_issued, 1);
+--     
+--     -- Assign default value if date_last_issued is NULL
+--     SET v_date_last_issued = IFNULL(date_last_issued, CURDATE());
+
+--     -- Insert into the table
+--     INSERT INTO members_issued_food_parcels
+--     (member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued)
+--     VALUES
+--     (member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued);
+-- END $$
+-- DELIMITER ;
+
+
+==========================================================================================================
+-- TRIGGER TO CHECK FOOD PARCEL STOCK LEVELS BEFORE ISSUING A FOOD PARCEL - WORKING
+
+DROP TRIGGER IF EXISTS TR_check_FOOD_PARCELS_stock_BEFORE_issue;
 
 DELIMITER $$
 
-CREATE PROCEDURE Sproc_issue_a_FOOD_parcel_IF_one_is_due
+CREATE TRIGGER TR_check_FOOD_PARCELS_stock_BEFORE_issue
+BEFORE INSERT ON members_issued_food_parcels
+FOR EACH ROW
+BEGIN
+    DECLARE available_stock INT;
+
+    -- Check stock level before allowing the insert
+    SELECT total_food_parcels_remaining INTO available_stock
+    FROM food_parcels_for_issue
+    WHERE food_parcel_id = NEW.food_parcel_id;
+
+    -- If stock is insufficient, prevent insertion and rollback
+    IF available_stock < NEW.amount_issued THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Insufficient stock available to issue requested food parcel';
+    END IF;
+END $$
+
+DELIMITER ;
+-- ===================================================================================================================================================
+-- UPDATED STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH A CHECK FOR WHEN DATE AND AMOUNT ISSUED ARE NULL - ADDED 06/6/2025 TO INCLUDE ERROR HANDLING - NOT WORKING
+
+/*
+DROP PROCEDURE IF EXISTS Sproc_issue_a_FOOD_parcel_IF_one_is_due_NEW_6THJUNE2025;
+
+DELIMITER $$
+CREATE PROCEDURE Sproc_issue_a_FOOD_parcel_IF_one_is_due_NEW_6THJUNE2025
     (IN member_id VARCHAR(10), IN food_parcel_id VARCHAR(20),
      IN collection_point_id VARCHAR(10), IN date_last_issued DATE, IN amount_issued INT)
 
@@ -1024,14 +1051,6 @@ BEGIN
     DECLARE v_amount_issued INT;
     DECLARE v_date_last_issued DATE;
     DECLARE v_available_stock INT;
-
-    -- Error Handling
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'An error occurred while issuing a food parcel. Transaction rolled back.';
-    END;
 
     -- Start transaction
     START TRANSACTION;
@@ -1043,14 +1062,15 @@ BEGIN
     -- Check stock availability
     SELECT total_food_parcels_remaining INTO v_available_stock
     FROM food_parcels_for_issue
-    WHERE food_parcel_id = NEW.food_parcel_id
+    WHERE food_parcel_id = @food_parcel_id
     FOR UPDATE;
 
     -- Abort if stock is insufficient
-    IF v_available_stock < v_amount_issued THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Insufficient stock. Unable to issue the requested food parcel.';
-        ROLLBACK;
+	IF v_available_stock IS NULL OR v_available_stock < v_amount_issued THEN
+		ROLLBACK;
+		SIGNAL SQLSTATE '45000' 
+		SET MESSAGE_TEXT = 'Insufficient stock. Unable to issue the requested food parcel.';
+
     ELSE
         -- Proceed with issuing the food parcel
         INSERT INTO members_issued_food_parcels
@@ -1060,18 +1080,19 @@ BEGIN
 
         -- Commit transaction if everything is successful
         COMMIT;
+        
     END IF;
     
 END $$
 
 DELIMITER ;
-
-
+*/
 
   
-    
--- OLD STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH NO CHECKS FOR WHEN DATE AND AMOUNT ISSUED ARE NULL
+-- ==============================================================================================================================    
+-- OLD STORED PROCEDURE TO ISSUE A FOOD PARCEL - WITH NO CHECKS FOR WHEN DATE AND AMOUNT ISSUED ARE NULL. WORKING BUT NOT IN USE
 
+/*
 DROP PROCEDURE IF EXISTS Sproc_issue_a_FOOD_parcel_IF_one_is_due
 
 DELIMITER $$
@@ -1086,6 +1107,6 @@ BEGIN
 	(member_id, food_parcel_id, collection_point_id, date_last_issued, amount_issued);
 END $$
 DELIMITER ;
-
+*/
     
 

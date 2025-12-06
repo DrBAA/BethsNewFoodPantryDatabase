@@ -55,7 +55,8 @@ INSERT INTO food_parcels_for_issue
  	('FP02', 'Halal', 0, 0),
 	('FP03', 'Normal diabetic', 0, 0),
 	('FP04', 'Vegan', 0, 0), 
-	('FP05', 'Vegetarian', 0, 0); 
+	('FP05', 'Vegetarian', 0, 0),
+    ('FP06', 'Italian', 0, 0);
 
 UPDATE food_parcels_for_issue
 SET total_food_parcels_remaining = 0;

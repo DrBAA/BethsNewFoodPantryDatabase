@@ -50,6 +50,66 @@ ALTER TABLE members_personal_details
 MODIFY age_range VARCHAR(20) CHECK (age_range IN ('18-25', '25-35', '35-45', '45-55', '55-65', '65-75',
 '75-85', '85-95', '95-105', '105-150', 'prefer not to say')) NOT NULL;
 
+-- DROP THE ADDRESS_ID FOREIGN KEY // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_personal_details
+DROP FOREIGN KEY FK_members_personal_details_address_id;
+
+-- CHANGE ADDRESS IDS FROM A01 TO A1 // DONE 17 8 2025
+UPDATE beths_new_food_pantry.members_address
+SET address_id = 
+  CASE 
+    WHEN address_id LIKE 'A%' THEN CONCAT('A', CAST(SUBSTRING(address_id, 2) AS UNSIGNED))
+    ELSE address_id
+  END;
+
+-- ADD THE ADDRESS_ID FOREIGN KEY AGAIN // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_personal_details
+ADD CONSTRAINT FK_members_personal_details_address_id
+FOREIGN KEY (address_id)
+REFERENCES beths_new_food_pantry.members_address(address_id)
+ON UPDATE CASCADE;
+
+-- CHANGE MEMBER ID FROM M01 TO M1
+-- DROP FK on member_id from members_personal_details
+ALTER TABLE beths_new_food_pantry.members_personal_details
+DROP FOREIGN KEY FK_members_personal_details_member_id;
+
+-- CHANGE MEMBER IDS FROM M1 TO M01 // DONE 17 8 2025
+
+-- DISABLE SAFE MODE TO ALLOW UPDATE
+SET SQL_SAFE_UPDATES = 0;
+
+-- UPDATE MEMBER_ID FORMAT IN PARENT TABLE
+UPDATE beths_new_food_pantry.members_personal_details
+SET member_id = 
+  CASE 
+    WHEN member_id LIKE 'M%' AND LENGTH(member_id) = 2 THEN CONCAT('M0', SUBSTRING(member_id, 2))
+    ELSE member_id
+  END;
+
+-- RE-ENABLE SAFE MODE
+SET SQL_SAFE_UPDATES = 1;
+
+
+
+-- CHANGE MEMBER IDS FROM M01 TO M1 // DONE 17 8 2025
+-- DISABLE SAFE MODE TO ALLOW UPDATE
+SET SQL_SAFE_UPDATES = 0;
+
+-- UPDATE MEMBER_ID FORMAT IN PARENT TABLE
+UPDATE beths_new_food_pantry.members_personal_details
+SET member_id = 
+  CASE 
+    WHEN member_id LIKE 'M0%' AND LENGTH(member_id) = 3 THEN CONCAT('M', SUBSTRING(member_id, 3))
+    ELSE member_id
+  END;
+
+-- RE-ENABLE SAFE MODE
+SET SQL_SAFE_UPDATES = 1;
+
+
+
+
 -- ===================================================================================  
 
 -- TABLE 3
@@ -95,6 +155,10 @@ CREATE TABLE incoming_food_parcels (
 ALTER TABLE incoming_food_parcels
 MODIFY amount_of_food_parcels_received INT NOT NULL;
 
+ALTER TABLE incoming_food_parcels
+MODIFY date_received DATE NOT NULL;
+
+
 -- ===================================================================================   
 
 -- TABLE 5
@@ -133,6 +197,9 @@ CREATE TABLE incoming_laptop_computers (
 ALTER TABLE incoming_laptop_computers
 MODIFY amount_of_laptops_received INT NOT NULL;
 
+ALTER TABLE incoming_laptop_computers
+MODIFY date_received DATE NOT NULL;
+
 -- ===================================================================================  
 
 -- TABLE 7
@@ -165,6 +232,19 @@ MODIFY date_last_issued DATE NOT NULL;
 
 ALTER TABLE members_issued_food_parcels
 MODIFY amount_issued INT CHECK (amount_issued IN (1)) NOT NULL;
+
+-- DROP FK: FK_members_issued_food_parcels_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_issued_food_parcels
+DROP FOREIGN KEY FK_members_issued_food_parcels_Member_id;
+
+-- RE-ADD FK: FK_members_issued_food_parcels_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_issued_food_parcels
+ADD CONSTRAINT FK_members_issued_food_parcels_Member_id
+FOREIGN KEY (member_id)
+REFERENCES beths_new_food_pantry.members_personal_details(member_id)
+ON UPDATE CASCADE;
+
+
 -- ===================================================================================    
 -- TABLE 9
 
@@ -190,6 +270,38 @@ MODIFY date_last_issued DATE NOT NULL;
 
 ALTER TABLE members_issued_laptop_computers
 MODIFY amount_issued INT CHECK (amount_issued IN (1)) NOT NULL;
+
+ALTER TABLE members_issued_laptop_computers
+DROP FOREIGN KEY FK_members_issued_laptop_computers_Member_id;
+
+
+ALTER TABLE members_issued_laptop_computers
+DROP INDEX member_id;
+
+ALTER TABLE members_issued_laptop_computers
+ADD CONSTRAINT FK_members_issued_laptop_computers_Member_id
+FOREIGN KEY (member_id)
+REFERENCES members_personal_details(member_id)
+ON UPDATE CASCADE;
+
+
+SHOW CREATE TABLE members_issued_laptop_computers;
+
+SHOW INDEX FROM members_issued_laptop_computers;
+
+
+-- DROP FK: FK_members_issued_laptop_computers_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_issued_laptop_computers
+DROP FOREIGN KEY FK_members_issued_laptop_computers_Member_id;
+
+-- RE-ADD FK: FK_members_issued_food_parcels_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.members_issued_laptop_computers
+ADD CONSTRAINT FK_members_issued_laptop_computers_Member_id
+FOREIGN KEY (member_id)
+REFERENCES beths_new_food_pantry.members_personal_details(member_id)
+ON UPDATE CASCADE;
+
+
 
 
 -- ===================================================================================   
@@ -218,6 +330,19 @@ CREATE TABLE other_support_requested_by_members(
 	CONSTRAINT FK_other_support_requested_by_members_Member_id FOREIGN KEY (member_id) REFERENCES members_personal_details (member_id) 
 );
 
+-- DROP FK: FK_other_support_requested_by_members_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.other_support_requested_by_members
+DROP FOREIGN KEY FK_other_support_requested_by_members_Member_id;
+
+-- RE-ADD FK: FK_members_issued_food_parcels_Member_id // DONE 17 8 2025
+ALTER TABLE beths_new_food_pantry.other_support_requested_by_members
+ADD CONSTRAINT FK_other_support_requested_by_members_Member_id
+FOREIGN KEY (member_id)
+REFERENCES beths_new_food_pantry.members_personal_details(member_id)
+ON UPDATE CASCADE;
+
+
+
 -- ====================================================================================================================================================================
 
 ALTER TABLE other_support_requested_by_members
@@ -231,4 +356,11 @@ MODIFY current_status_of_request VARCHAR(100) NOT NULL;
 
 
 
+-- ====================================================================================================================================================================
+
+CREATE TABLE temp_search_results_after_check_eligiblity_for_food_parcel (
+    search_id CHAR(36) NOT NULL PRIMARY KEY,         -- UUID for search session
+    user_id VARCHAR(255) NOT NULL,                   -- Authenticated user ID
+    member_list_json JSON NOT NULL                   -- Serialized list of members
+);
 
