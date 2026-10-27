@@ -1,6 +1,6 @@
-{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang2057{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil Calibri;}{\f2\fnil\fcharset1 Segoe UI Symbol;}{\f3\fnil\fcharset1 Cambria Math;}{\f4\fnil\fcharset0 Cambria Math;}{\f5\fnil Cambria Math;}{\f6\fnil\fcharset1 Segoe UI Emoji;}{\f7\fnil\fcharset0 Segoe UI Symbol;}{\f8\fnil Segoe UI Symbol;}{\f9\fnil\fcharset2 Symbol;}}
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang2057{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil Calibri;}{\f2\fnil\fcharset1 Segoe UI Symbol;}{\f3\fnil\fcharset1 Cambria Math;}{\f4\fnil Cambria Math;}{\f5\fnil\fcharset0 Cambria Math;}{\f6\fnil Segoe UI Emoji;}{\f7\fnil\fcharset1 Segoe UI Symbol;}{\f8\fnil\fcharset0 Segoe UI Symbol;}{\f9\fnil Segoe UI Symbol;}{\f10\fnil\fcharset2 Symbol;}}
 {\*\generator Riched20 10.0.19041}{\*\mmathPr\mmathFont3\mwrapIndent1440 }\viewkind4\uc1 
-\pard\sa200\sl276\slmult1\qc\b\f0\fs22\lang9 UPDATES TO THE FOOD PANTRY DATABASE\b0\par
+\pard\sa200\sl276\slmult1\qc\b\f0\fs28\lang9 UPDATES TO THE FOOD PANTRY DATABASE\b0\fs22\par
 
 \pard\sa200\sl276\slmult1\par
 \b TRIGGERS\par
@@ -33,19 +33,19 @@ This way, the database only performs one UPDATE operation instead of two, improv
 For example, imagine two people issuing a food parcel at the same time. If your database doesn't handle concurrency well, both transactions might read the same stock level, update it independently, and overwrite each other, causing incorrect totals.\par
 To prevent this, you can use locking or transaction control techniques, such as:\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 Row-level locking (SELECT ... FOR UPDATE): Ensures only one transaction can modify a row at a time.\par
-{\pntext\f9\'B7\tab}Optimistic locking: Uses version numbers or timestamps to detect conflicts before committing changes.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 Row-level locking (SELECT ... FOR UPDATE): Ensures only one transaction can modify a row at a time.\par
+{\pntext\f10\'B7\tab}Optimistic locking: Uses version numbers or timestamps to detect conflicts before committing changes.\par
 
 \pard\sa200\sl276\slmult1\b\f0 05/6/2025 \b0 - Added \f1 FOR UPDATE\f0\lang2057 ; for \lang9 concurrency controls. This locks the row before updating preventing race conditions when multiple transactions try to update the same food parcel. This ensures stock levels remain accurate even when multiple transactions happen simultaneously. \par
 \b 05/6/2025 \b0 - Added Timeout (SET innodb_lock_wait_timeout = 5;)\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Prevents long waits when a row is locked by another transaction, reducing the risk of deadlocks.\par
-{\pntext\f9\'B7\tab}This ensures that if a transaction can't acquire a lock within 5 seconds, it fails instead of waiting indefinitely.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Prevents long waits when a row is locked by another transaction, reducing the risk of deadlocks.\par
+{\pntext\f10\'B7\tab}This ensures that if a transaction can't acquire a lock within 5 seconds, it fails instead of waiting indefinitely.\par
 
 \pard\sa200\sl276\slmult1\b 05/6/2025 \b0 - Implemented Error Handling (DECLARE EXIT HANDLER FOR SQLEXCEPTION / SQLSTATE '40001')\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Ensures failures like deadlocks or unexpected errors don\f1\rquote\f0 t corrupt data.\par
-{\pntext\f9\'B7\tab}If a deadlock (SQLSTATE '40001') or another error occurs, the system triggers an error message instead of allowing faulty updates.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Ensures failures like deadlocks or unexpected errors don\f1\rquote\f0 t corrupt data.\par
+{\pntext\f10\'B7\tab}If a deadlock (SQLSTATE '40001') or another error occurs, the system triggers an error message instead of allowing faulty updates.\par
 
 \pard\sa200\sl276\slmult1\b 05/6/2025 \b0 - Replaced Hardcoded IDs such as FP01 with NEW.food_parcel_id\par
 Allows the trigger to dynamically handle any food parcel, instead of being limited to one (FP01).\par
@@ -53,9 +53,7 @@ NEW.food_parcel_id pulls the ID directly from the newly inserted row, making the
 \par
 Here\f1\rquote\f0 s a good approach:\par
 DROP TRIGGER IF EXISTS TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel;\par
-\par
 DELIMITER $$\par
-\par
 CREATE TRIGGER TR_update_food_parcels_stock_AFTER_issue_NORMAL_diet_food_parcel\par
 AFTER INSERT ON members_issued_food_parcels\par
 FOR EACH ROW\par
@@ -98,10 +96,10 @@ DELIMITER ;\par
 \par
 \b Why It Works:\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1\b0 FOR UPDATE locks the row, preventing other transactions from changing it until the trigger completes.\par
-{\pntext\f9\'B7\tab}Reduces race conditions, ensuring your stock levels remain accurate.\par
-{\pntext\f9\'B7\tab}Error handling (DECLARE EXIT HANDLER) ensures deadlocks and unexpected errors don\f1\rquote\f0 t disrupt updates.\par
-{\pntext\f9\'B7\tab}\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1\b0 FOR UPDATE locks the row, preventing other transactions from changing it until the trigger completes.\par
+{\pntext\f10\'B7\tab}Reduces race conditions, ensuring your stock levels remain accurate.\par
+{\pntext\f10\'B7\tab}Error handling (DECLARE EXIT HANDLER) ensures deadlocks and unexpected errors don\f1\rquote\f0 t disrupt updates.\par
+{\pntext\f10\'B7\tab}\par
 
 \pard\sa200\sl276\slmult1\b Key Additions:\par
 \b0\f2\lang2057\u9989?\f1  \f0 FOR UPDATE; \f3\u8594?\f1  \f0 Locks the row, preventing other transactions from modifying \lang9 until this one is done.\par
@@ -116,8 +114,8 @@ This refined version keeps your database efficient, avoids concurrency issues, a
 \b HOW TO TELL IF A DATABASE SUPPORTS TRANSACTIONS?\par
 \b0 MySQL:\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 InnoDB supports transactions.\par
-{\pntext\f9\'B7\tab}MyISAM does not support transactions.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 InnoDB supports transactions.\par
+{\pntext\f10\'B7\tab}MyISAM does not support transactions.\par
 
 \pard\sa200\sl276\slmult1\par
 Run this command to check\par
@@ -131,28 +129,28 @@ MySQL triggers do not support rollback, but stored procedures do. If a failure o
 \par
 \b Step-by-Step Execution\b0\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 The trigger fires automatically when a \b new laptop or food parcel entry \b0 is added to incoming_laptop_computers, incoming_food_parcels or any other appropriate tables that store food parcel and laptop quantities.\par
-{\pntext\f9\'B7\tab}The trigger calls the stored procedure, passing \b the laptop ID or food parcel ID \b0 along with the received quantity, ensuring stock levels are updated correctly for both items.\par
-{\pntext\f9\'B7\tab}The stored procedure begins execution and starts a transaction, ensuring all updates happen as a single unit.\par
-{\pntext\f9\'B7\tab}A timeout is set (SET innodb_lock_wait_timeout = 5;) to prevent delays if another transaction is locking the row.\par
-{\pntext\f9\'B7\tab}Row locking (FOR UPDATE) ensures that only one transaction can modify stock levels at a time.\par
-{\pntext\f9\'B7\tab}The stock levels update, increasing total_laptops_remaining by the newly received laptop quantity.\par
-{\pntext\f9\'B7\tab}If an error occurs, the procedure triggers rollback (ROLLBACK;), ensuring faulty updates do not persist, and raises a custom error message (SIGNAL SQLSTATE '45000').\par
-{\pntext\f9\'B7\tab}If no errors occur, the transaction is committed (COMMIT;), finalizing all stock updates safely.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li360\sa200\sl276\slmult1 The trigger fires automatically when a \b new laptop or food parcel entry \b0 is added to incoming_laptop_computers, incoming_food_parcels or any other appropriate tables that store food parcel and laptop quantities.\par
+{\pntext\f10\'B7\tab}The trigger calls the stored procedure, passing \b the laptop ID or food parcel ID \b0 along with the received quantity, ensuring stock levels are updated correctly for both items.\par
+{\pntext\f10\'B7\tab}The stored procedure begins execution and starts a transaction, ensuring all updates happen as a single unit.\par
+{\pntext\f10\'B7\tab}A timeout is set (SET innodb_lock_wait_timeout = 5;) to prevent delays if another transaction is locking the row.\par
+{\pntext\f10\'B7\tab}Row locking (FOR UPDATE) ensures that only one transaction can modify stock levels at a time.\par
+{\pntext\f10\'B7\tab}The stock levels update, increasing total_laptops_remaining by the newly received laptop quantity.\par
+{\pntext\f10\'B7\tab}If an error occurs, the procedure triggers rollback (ROLLBACK;), ensuring faulty updates do not persist, and raises a custom error message (SIGNAL SQLSTATE '45000').\par
+{\pntext\f10\'B7\tab}If no errors occur, the transaction is committed (COMMIT;), finalizing all stock updates safely.\par
 
 \pard\sa200\sl276\slmult1\b Why This Approach Works Well\b0\par
 
-\pard{\pntext\f9\'B7\tab}{\*\pn\pnlvlblt\pnf9\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1\f3 More reliable stock updates \u8594? Ensures transactions fully complete, avoiding partial or incomplete updates that could cause discrepancies.\par
-{\pntext\f9\'B7\tab}Efficient row locking (FOR UPDATE;) \u8594? Prevents race conditions when multiple transactions try updating stock simultaneously, ensuring smooth execution.\par
-{\pntext\f9\'B7\tab}Lightweight trigger \u8594? The trigger only calls the procedure, instead of managing transactions directly, making maintenance easier and reducing complexity.\par
-{\pntext\f9\'B7\tab}Ensures data integrity \u8594? Prevents incomplete updates from affecting stock levels by committing changes only when all conditions are met.\par
-{\pntext\f9\'B7\tab}Improves error handling \u8594? Allows MySQL to properly manage failures, ensuring database consistency without corruption.\par
-{\pntext\f9\'B7\tab}Optimizes execution \u8594? The combination of rollback, timeout settings, and transaction control ensures safe, efficient, and scalable concurrency handling.\par
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1\f4 More reliable stock updates \f3\u8594? Ensures transactions fully complete, avoiding partial or incomplete updates that could cause discrepancies.\par
+{\pntext\f10\'B7\tab}Efficient row locking (FOR UPDATE;) \u8594? Prevents race conditions when multiple transactions try updating stock simultaneously, ensuring smooth execution.\par
+{\pntext\f10\'B7\tab}Lightweight trigger \u8594? The trigger only calls the procedure, instead of managing transactions directly, making maintenance easier and reducing complexity.\par
+{\pntext\f10\'B7\tab}Ensures data integrity \u8594? Prevents incomplete updates from affecting stock levels by committing changes only when all conditions are met.\par
+{\pntext\f10\'B7\tab}Improves error handling \u8594? Allows MySQL to properly manage failures, ensuring database consistency without corruption.\par
+{\pntext\f10\'B7\tab}Optimizes execution \u8594? The combination of rollback, timeout settings, and transaction control ensures safe, efficient, and scalable concurrency handling.\par
 
 \pard\sa200\sl276\slmult1 This approach strengthens the reliability of stock updates, prevents inconsistencies, and keeps operations running smoothly.\par
 \par
-\b\f4\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due by adding local variables:\par
-\b0\f5     -- Declare local variables\par
+\b\f5\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due by adding local variables:\par
+\b0\f4     -- Declare local variables\par
     DECLARE v_amount_issued INT;\par
     DECLARE v_date_last_issued DATE;\par
 \par
@@ -172,7 +170,7 @@ Prevents unexpected behavior \u8594? If MySQL treats IN parameters as read-only,
 Improves clarity \u8594? Using local variables makes debugging and future modifications easier.\par
 By declaring v_amount_issued and v_date_last_issued, you ensure the procedure correctly assigns default values before inserting data.\par
 \par
-\b\f4\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due as shown below \b0 :The updated stored procedure now includes several improvements to enhance data integrity, and stock validation before issuing a food parcel.\b\par
+\b\f5\lang2057 5/6/2025\b0  - \b updated Sproc_issue_a_FOOD_parcel_IF_one_is_due as shown below \b0 :The updated stored procedure now includes several improvements to enhance data integrity, and stock validation before issuing a food parcel.\b\par
 ADDED\par
 Error Handling (DECLARE EXIT HANDLER FOR SQLEXCEPTION)\par
 \b0 Captures unexpected errors during execution.\par
@@ -190,7 +188,7 @@ Prevents race conditions when several users try issuing food parcels simultaneou
 \par
 \b Deducting Issued Amount After Confirmation\par
 \b0 After verifying stock, the procedure reduces the total available food parcels (UPDATE food_parcels_for_issue).\par
-Ensures accurate stock tracking only after a successful issuance.\f5\par
+Ensures accurate stock tracking only after a successful issuance.\f4\par
 \f0\lang9\par
 \par
 \b 06/06/2025\b0  - updated the stored procedure as follows:-\par
@@ -237,41 +235,974 @@ END $$\par
 DELIMITER ;\par
 \par
 This stored procedure updates stock levels for food parcels after issuance, ensuring data integrity while handling potential errors.\par
-\f6 1\u-497?\f2\u8419? \f7\lang2057   \f2\lang9 Check if the Procedure Exists & Drop it (if necessary)\par
-\par
+\f6 1\f7\u-497?\u8419? \f8\lang2057   \f9\lang9 Check if the Procedure Exists & Drop it (if necessary)\par
 DROP PROCEDURE IF EXISTS ensures that if the procedure already exists, it gets removed before redefining it.\par
 \par
-\f6 2\u-497?\f2\u8419? \f7\lang2057  \f2\lang9 Declare Variables\par
-\par
+\f6 2\f7\u-497?\u8419? \f8\lang2057  \f9\lang9 Declare Variables\par
 dummy_var VARCHAR(20); is used to store the food_parcel_id temporarily.\par
 \par
-\f6 3\u-497?\f2\u8419? \f7\lang2057  \f2\lang9 Handle Errors with SIGNAL SQLSTATE Instead of Rollback\par
-\par
+\f6 3\f7\u-497?\u8419? \f8\lang2057  \f9\lang9 Handle Errors with SIGNAL SQLSTATE Instead of Rollback\par
 Deadlock Detection: If a deadlock occurs (SQLSTATE '40001'), the procedure stops execution and raises an error.\par
-\par
 General SQL Errors: If any other database error occurs, an error message is signaled.\par
 \par
-\f6 4\u-497?\f2\u8419? \f7\lang2057  \f2\lang9 Lock the Row Before Updating (SELECT ... FOR UPDATE)\par
-\par
+\f6 4\f7\u-497?\u8419? \f8\lang2057  \f9\lang9 Lock the Row Before Updating (SELECT ... FOR UPDATE)\par
 Prevents concurrent modifications to the same row, ensuring only one transaction updates stock at a time.\par
+The value is stored in dummy_var, but it isn\rquote t actually used\emdash just locked.\par
 \par
-The value is stored in dummy_var, but it isn\rquote t actually used\f8\emdash just locked.\par
-\par
-\f6 5\u-497?\f2\u8419?\f7\lang2057   \f2\lang9 Update Stock Levels in food_parcels_for_issue\par
-\par
+\f6 5\f7\u-497?\u8419?\f8\lang2057   \f9\lang9 Update Stock Levels in food_parcels_for_issue\par
 total_food_parcels_issued increases by the amount issued.\par
-\par
 total_food_parcels_remaining decreases by the amount issued.\par
-\par
 This ensures accurate tracking of available stock.\par
 \par
-\b\f7\lang2057 WHEN DOES THE ABOVE FP RUN\b0\f2\lang9\par
-Your stored procedure (SP_update_food_parcels_stock_AFTER_ISSUING_food_parcels) runs whenever it is called explicitly\f8\emdash either from an application or automatically via the trigger.\par
+\b\f8\lang2057 WHEN DOES THE ABOVE FP RUN\b0\f9\lang9\par
+Your stored procedure (SP_update_food_parcels_stock_AFTER_ISSUING_food_parcels) runs whenever it is called explicitly\emdash either from an application or automatically via the trigger.\par
 When Does It Execute?\par
-\f6 1\u-497?\f2\u8419? \f7\lang2057   \f2\lang9 When Your Trigger Fires Automatically\par
+\f6 1\f7\u-497?\u8419? \f8\lang2057   \f9\lang9 When Your Trigger Fires Automatically\par
 The trigger TR_update_food_parcels_stock_AFTER_ISSUING_food_parcels is set to run AFTER INSERT on members_issued_food_parcels.\par
-Whenever a new row is inserted into members_issued_food_parcels, MySQL calls the stored procedure, updating stock levels accordingly.\f8\par
+Whenever a new row is inserted into members_issued_food_parcels, MySQL calls the stored procedure, updating stock levels accordingly.\par
 \f0\par
 \par
+\b 02/08/2026 - ADDED A NEW STORED PROCEDURE - SP_create_address - FOR CREATING ADDRESSES\b0\par
+\b\f9 What it is:\par
+\b0 A production\_grade MySQL stored procedure that safely creates a new address record, generates a unique address_id using the prefix A, handles concurrency with row\_level locking, retries deadlocked transactions, applies a short lock\_wait timeout, distinguishes duplicate\_address violations using a dedicated SQLSTATE 23000 handler, rolls back cleanly on all other SQL errors, and returns both the full address data and an explicit o_sqlstate OUT parameter so the application can reliably determine whether the address was created (00000), already existed (23000), failed due to another SQL exception (HY000), or ultimately failed after exhausting all retry attempts (45000).\par
+\b Race\_Safe Stored Procedure: sp_create_address\par
+\b0 DROP PROCEDURE IF EXISTS SP_create_address\par
+\par
+DELIMITER $$\par
+\par
+CREATE PROCEDURE SP_create_address(\par
+    IN p_house_number_or_name VARCHAR(15),\par
+    IN p_street_name  VARCHAR(50),\par
+    IN p_city_or_town VARCHAR(50),\par
+    IN p_post_code    VARCHAR(10),\par
+    IN p_country      VARCHAR(10),\par
+    OUT o_address_id  VARCHAR(10),\par
+    OUT o_house_number_or_name VARCHAR(15),\par
+    OUT o_street_name  VARCHAR(50),\par
+    OUT o_city_or_town VARCHAR(50),\par
+    OUT o_post_code    VARCHAR(10),\par
+    OUT o_country      VARCHAR(10),\par
+    OUT o_sqlstate VARCHAR(5)\par
+)\par
+BEGIN\par
+    DECLARE v_next_id VARCHAR(10);\par
+    DECLARE v_max_num INT DEFAULT NULL;\par
+    DECLARE v_attempts INT DEFAULT 0;\par
+    DECLARE v_done INT DEFAULT 0;\par
+\par
+    -- NEW: Set lock wait timeout to 5 seconds\par
+    SET innodb_lock_wait_timeout = 5;\par
+\par
+    -- NEW: Retry loop (max 3 attempts)\par
+    WHILE v_done = 0 AND v_attempts < 3 DO\par
+        SET v_attempts = v_attempts + 1;\par
+\par
+        BEGIN        \par
+\tab\tab\tab -- NEW: Duplicate key handler (SQLSTATE 23000)\par
+\tab\tab\tab DECLARE EXIT HANDLER FOR SQLSTATE '23000'\par
+\tab\tab\tab BEGIN\par
+\tab\tab\tab\tab ROLLBACK;\par
+\tab\tab\tab\tab -- Return attempted address so Java can detect ADDRESS EXISTS\par
+\tab\tab\tab\tab SET o_address_id = NULL;\par
+\tab\tab\tab\tab SET o_house_number_or_name = p_house_number_or_name;\par
+\tab\tab\tab\tab SET o_street_name = p_street_name;\par
+\tab\tab\tab\tab SET o_city_or_town = p_city_or_town;\par
+\tab\tab\tab\tab SET o_post_code = p_post_code;\par
+\tab\tab\tab\tab SET o_country = p_country;\par
+                SET o_sqlstate = '23000'; -- duplicate address\par
+\par
+\tab\tab\tab\tab SET v_done = 1;  -- Stop retrying\par
+\tab\tab\tab END;      \par
+        \par
+        \par
+            -- Deadlock handler (SQLSTATE 40001)\par
+            DECLARE EXIT HANDLER FOR SQLSTATE '40001'\par
+            BEGIN\par
+                ROLLBACK;\par
+                -- Retry by continuing the loop\par
+            END;\par
+\par
+            -- Generic error handler\par
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION\par
+            BEGIN\par
+                ROLLBACK;\par
+                SET o_address_id = NULL;\par
+                SET o_house_number_or_name = NULL;\par
+                SET o_street_name = NULL;\par
+                SET o_city_or_town = NULL;\par
+                SET o_post_code = NULL;\par
+                SET o_country = NULL;\par
+                SET o_sqlstate = 'HY000'; -- other SQL error\par
+                SET v_done = 1; -- Stop retrying\par
+            END;\par
+\par
+            START TRANSACTION;\par
+\par
+            -- Row-level lock on the highest ID row (safe under concurrency)\par
+            SELECT CAST(SUBSTRING(address_id, 2) AS UNSIGNED)\par
+            INTO v_max_num\par
+            FROM members_address\par
+            ORDER BY CAST(SUBSTRING(address_id, 2) AS UNSIGNED) DESC\par
+            LIMIT 1\par
+            FOR UPDATE;\par
+\par
+            -- Generate next ID using prefix A\par
+            IF v_max_num IS NULL THEN\par
+                SET v_next_id = 'A0';\par
+            ELSE\par
+                SET v_next_id = CONCAT('A', v_max_num + 1);\par
+            END IF;\par
+\par
+            -- Insert new address\par
+            INSERT INTO members_address (\par
+                address_id,\par
+                house_number_or_name,\par
+                street_name,\par
+                city_or_town,\par
+                post_code,\par
+                country\par
+            )\par
+            VALUES (\par
+                v_next_id,\par
+                p_house_number_or_name,\par
+                p_street_name,\par
+                p_city_or_town,\par
+                p_post_code,\par
+                p_country\par
+            );\par
+\par
+            -- Return full inserted row\par
+            SET o_address_id   = v_next_id;\par
+            SET o_house_number_or_name = p_house_number_or_name;\par
+            SET o_street_name  = p_street_name;\par
+            SET o_city_or_town = p_city_or_town;\par
+            SET o_post_code    = p_post_code;\par
+            SET o_country      = p_country;\par
+\par
+            COMMIT;\par
+            \par
+            SET o_sqlstate = '00000'; -- success\par
+\par
+            SET v_done = 1; -- Success, exit loop\par
+        END;\par
+    END WHILE;\par
+\par
+    -- If all retries failed\par
+    IF v_done = 0 THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'sp_create_address failed after 3 retry attempts.';\par
+    END IF;\par
+\par
+END$$\par
+\par
+DELIMITER ;\par
+\b\f8\lang2057 What it does\par
+\par
+1. Declares internal variables\par
+\par
+\b0 v_next_id \f3\u8594?\f9  \f8 the newly generated ID (e.g., "A53")\par
+v_max_num \f3\u8594?\f9  \f8 highest numeric portion of existing IDs\par
+v_attempts \f3\u8594?\f9  \f8 retry counter\par
+v_done \f3\u8594?\f9  \f8 signals success or failure\par
+\par
+These control ID generation, retry logic, and exit conditions.\par
+\par
+\par
+2. Sets a lock\f9\_wait timeout\par
+SET innodb_lock_wait_timeout = 5;\par
+Prevents long blocking when another transaction holds a lock on the ID row.\par
+\par
+\par
+3. Implements retry logic\par
+A WHILE loop attempts the operation up to 3 times.\par
+If a deadlock occurs (SQLSTATE 40001), the procedure rolls back and retries automatically.\par
+If any non\_deadlock error occurs, retries stop immediately.\par
+If all retries fail, the procedure raises SQLSTATE 45000 to signal retry exhaustion.\par
+\par
+\par
+4. Defines three distinct error handlers\par
+\par
+Duplicate key handler (SQLSTATE 23000):\par
+Triggered when the UNIQUE constraint rejects a duplicate address.\par
+Rolls back, returns NULL for addressId, returns the attempted address fields,\par
+sets o_sqlstate = '23000', and stops execution.\par
+Allows Java to detect \ldblquote ADDRESS EXISTS\rdblquote .\par
+\par
+Deadlock handler (SQLSTATE 40001):\par
+Rolls back and allows the retry loop to continue.\par
+No SQLSTATE is returned because the SP retries internally.\par
+\par
+Generic SQL exception handler (SQLEXCEPTION):\par
+Rolls back, clears ALL OUT parameters, sets o_sqlstate = 'HY000',\par
+and stops execution.\par
+Used for all other SQL errors.\par
+\par
+\par
+5. Starts a transaction\par
+START TRANSACTION;\par
+Ensures atomicity: either the entire insert succeeds or everything rolls back cleanly.\par
+\par
+\par
+6. Reads the highest existing ID using row\_level locking\par
+\f8 SELECT \f9\'85 \f8 FOR UPDATE:\f9\par
+Locks the row containing the highest address_id.\par
+Prevents concurrent sessions from generating the same next ID.\par
+Extracts the numeric portion using SUBSTRING(address_id, 2).\par
+\par
+\par
+7. Generates the next ID\par
+If no rows exist:\par
+v_next_id = 'A0'\par
+Else:\par
+v_next_id = CONCAT('A', v_max_num + 1)\par
+Produces IDs like:\par
+\f8 A0, A1, A2 \f9\'85 \f8 A53, A54\f9\par
+\par
+\par
+8. Inserts the new address\par
+INSERT INTO members_address_testing (...)\par
+VALUES (v_next_id, p_house_number_or_name, p_street_name, p_city_or_town, p_post_code, p_country);\par
+If the address is a duplicate, the UNIQUE constraint triggers SQLSTATE 23000\par
+and the duplicate handler runs.\par
+\par
+\par
+9. Returns the full inserted address\par
+OUT parameters return:\par
+addressId, houseNumberOrName, streetName, cityOrTown, postCode, country\par
+o_sqlstate = '00000' on success\par
+o_sqlstate = '23000' on duplicate\par
+o_sqlstate = 'HY000' on other SQL errors\par
+\par
+If duplicate:\par
+addressId = NULL\par
+Other fields = attempted values\par
+\par
+If other SQL error:\par
+All OUT params = NULL\par
+\par
+\par
+10. Commits the transaction\par
+COMMIT;\par
+Sets o_sqlstate = '00000' to indicate success.\par
+Finalizes the insert only if:\par
+No deadlocks remain\par
+No SQL errors occurred\par
+ID generation and insertion succeeded\par
+\par
+\par
+Summary:\par
+This stored procedure is now:\par
+Transactional  \par
+Thread\_safe  \par
+Race\_safe  \par
+Retry\_protected  \par
+Deadlock\_safe  \par
+Duplicate\_aware  \par
+Timeout\_safe  \par
+Fully atomic  \par
+Returns full data  \par
+Returns duplicate attempts cleanly  \par
+Returns SQLSTATE explicitly  \par
+Uses prefix A(n+1)  \par
+Suitable for real production environments\f0\par
+\lang9\par
+\par
+\par
+\par
+\b 02/08/2026 \b0 - ADDED a members_address_testing to test address creation before inserting them on the real database tale.\par
+CREATE TABLE members_address_testing(\par
+    address_id VARCHAR(10) NOT NULL,\par
+    house_number VARCHAR(15) NOT NULL,\par
+    street_name VARCHAR(50) NOT NULL,\par
+    city_or_town VARCHAR(50) NOT NULL,\par
+    post_code VARCHAR(10) NOT NULL,\par
+    country VARCHAR(10) NOT NULL,\par
+\par
+    CONSTRAINT PK_members_address_testing_Address_id PRIMARY KEY (address_id),\par
+\par
+    -- Prevent duplicate addresses (full address must be unique)\par
+    CONSTRAINT UQ_members_address_testing_full_address\par
+        UNIQUE (house_number, street_name, city_or_town, post_code)\par
+);\par
+\par
+\b Address Uniqueness \f1\emdash  Notes\par
+\b0 What makes an address unique:\par
+The system prevents duplicate addresses using a composite unique constraint at the database level. \par
+This constraint ensures that the combination of:\par
+\par
+- house_number_or_name\par
+- post_code\par
+must be unique across the entire table.\par
+\par
+\b Why this matters:\b0\par
+- Many different addresses share the same postcode.\par
+-  Only the full combination of fields reliably identifies a unique physical address.\par
+\par
+\b How duplicates are prevented:\b0\par
+The table defines a composite UNIQUE constraint:\par
+    UNIQUE (house_number_or_name, post_code)\par
+\par
+\b This means:\b0\par
+- The database will reject any attempt to insert an address that matches all \f0\lang2057 two\f1\lang9  fields.\par
+- The stored procedure does not need to check for duplicates manually.\par
+- The controller catches the database integrity exception and returns a clean 409 Conflict response.\par
+\par
+\b Benefits:\b0\par
+- Duplicate prevention is handled by the database engine (fast, safe, race\f9\_\f0 condition\f9\_\f0 proof).\par
+- The stored procedure remains focused on ID generation and transactional safety.\par
+- The controller provides clear feedback to the frontend when a duplicate address is submitted.\par
+\par
+\b 04/8/2026 - members_address table schema\b0\par
+\b 1. Renamed Column\b0\par
+The column house_number was renamed to house_number_or_name to better reflect the data stored (house numbers or named properties). It was also updated to be NOT NULL to ensure all addresses include a valid identifier.\par
+ALTER TABLE members_address\par
+    CHANGE COLUMN house_number house_number_or_name VARCHAR(15) NOT NULL;\par
+\par
+\b 2. Enforced NOT NULL Constraints\b0\par
+To improve data integrity and ensure all address records contain complete information, the following columns were modified to NOT NULL:\par
+street_name\par
+city_or_town\par
+country\par
+ALTER TABLE members_address\par
+    MODIFY COLUMN street_name VARCHAR(50) NOT NULL;\par
+ALTER TABLE members_address\par
+    MODIFY COLUMN city_or_town VARCHAR(50) NOT NULL;\par
+ALTER TABLE members_address\par
+    MODIFY COLUMN country VARCHAR(10) NOT NULL;\par
+\par
+\b 3. Added Composite Unique Constraint\b0\par
+A new composite unique constraint was added to prevent duplicate addresses within the same postcode. This ensures that each combination of house_number_or_name + post_code is unique, matching real\f9\_\f0 world UK addressing rules.\par
+ALTER TABLE members_address\par
+    ADD CONSTRAINT UQ_members_address_unique\par
+        UNIQUE (house_number_or_name, post_code);\par
+\par
+\f7\u-10179?\u-9012?\f1  \b\f0 Summary\b0\par
+These changes improve:\par
+
+\pard{\pntext\f10\'B7\tab}{\*\pn\pnlvlblt\pnf10\pnindent0{\pntxtb\'B7}}\fi-360\li720\sa200\sl276\slmult1 Data accuracy (no missing fields)\par
+{\pntext\f10\'B7\tab}Address uniqueness (correct composite key)\par
+{\pntext\f10\'B7\tab}Column naming clarity (house number OR name)\par
+{\pntext\f10\'B7\tab}Database consistency (aligned with stored procedure logic)\par
+
+\pard\sa200\sl276\slmult1\par
+\b 5/8/2026 - 4). Altered settings for Country column to below\par
+\b0 ALTER TABLE members_address\par
+    MODIFY country VARCHAR(2) NOT NULL DEFAULT 'UK',\par
+    ADD CONSTRAINT CHK_country_only_uk CHECK (country = 'UK');\par
+\f2\u11088? What happens now\par
+Caller sends nothing \f3\u8594?\f1  \f0 country becomes 'UK'\par
+Caller sends 'UK' \f3\u8594?\f1  \f0 accepted\par
+Caller sends 'UB', 'US', 'FR', etc \f3\u8594?\f1  \f0 rejected with error 3819\par
+Caller sends NULL \f3\u8594?\f1  \f0 rejected with 1048\par
+Caller sends more than 2 chars \f3\u8594?\f1  \f0 rejected with 1406\par
+Your stored procedure already handles all of these.\par
+\b\lang9 07/8/2026\b0  - added the below check constraints so that stored procedure can return specific errors when each check constraint is violated\par
+CONSTRAINT `CHK_city_not_empty` CHECK ((trim(`city_or_town`) <> ''))\par
+CONSTRAINT `CHK_country_not_empty` CHECK ((trim(`country`) <> ''))\par
+CONSTRAINT `CHK_house_number_not_empty` CHECK ((trim(`house_number_or_name`) <> ''))\par
+CONSTRAINT `CHK_street_name_not_empty` CHECK ((trim(`street_name`) <> ''))\par
+CONSTRAINT `CHK_post_code_not_empty` CHECK ((trim(`post_code`) <> ''))\par
+\par
+\b STORED PROCEDURE FOR INSERTING DATA INTO MEMBERS_ADDRESS TABLE\b0\par
+07/8/2026 - ammended the below stored procedure to function as intended and return specific MySQL errors to the backend Java\par
+DROP PROCEDURE IF EXISTS SP_create_address\par
+\par
+
+\pard\sl240\slmult1 DELIMITER $$\par
+\par
+CREATE PROCEDURE SP_create_address(\par
+    IN p_house_number_or_name VARCHAR(255),\par
+    IN p_street_name  VARCHAR(255),\par
+    IN p_city_or_town VARCHAR(255),\par
+    IN p_post_code    VARCHAR(255),\par
+    IN p_country      VARCHAR(255),\par
+    \par
+    OUT o_address_id  VARCHAR(10),\par
+    OUT o_house_number_or_name VARCHAR(15),\par
+    OUT o_street_name  VARCHAR(50),\par
+    OUT o_city_or_town VARCHAR(50),\par
+    OUT o_post_code    VARCHAR(10),\par
+    OUT o_country      VARCHAR(2),\par
+    OUT o_sqlstate VARCHAR(20) -- returns SQLSTATE/ MySql error codes\par
+)\par
+\par
+BEGIN\par
+\tab -- Declare variables\par
+    DECLARE v_next_id VARCHAR(10);\par
+    DECLARE v_max_num INT DEFAULT NULL;\par
+    DECLARE v_attempts INT DEFAULT 0;\par
+    DECLARE v_done INT DEFAULT 0;\par
+\par
+    -- NEW: Set lock wait timeout to 5 seconds\par
+    SET innodb_lock_wait_timeout = 5;\par
+\par
+    -- NEW: Retry loop (max 3 attempts)\par
+    WHILE v_done = 0 AND v_attempts < 3 DO\par
+        SET v_attempts = v_attempts + 1;\par
+\par
+        BEGIN        \par
+\tab\tab\tab -- NEW: Duplicate key handler (MySQL error 1062)\par
+            DECLARE EXIT HANDLER FOR 1062\par
+\tab\tab\tab BEGIN\par
+\tab\tab\tab\tab ROLLBACK;\par
+\par
+\tab\tab\tab\tab -- Fetch the existing address_id based on the unique constraint\par
+\tab\tab\tab\tab SELECT address_id\par
+\tab\tab\tab\tab INTO o_address_id\par
+\tab\tab\tab\tab FROM members_address\par
+\tab\tab\tab\tab WHERE house_number_or_name = p_house_number_or_name\par
+\tab\tab\tab\tab   AND post_code = p_post_code\par
+\tab\tab\tab\tab LIMIT 1;\par
+\par
+\tab\tab\tab\tab -- Return the input values (they match the existing row)\par
+\tab\tab\tab\tab SET o_house_number_or_name = p_house_number_or_name;\par
+\tab\tab\tab\tab SET o_street_name = p_street_name;\par
+\tab\tab\tab\tab SET o_city_or_town = p_city_or_town;\par
+\tab\tab\tab\tab SET o_post_code = p_post_code;\par
+\tab\tab\tab\tab SET o_country = p_country;\par
+\par
+\tab\tab\tab\tab SET o_sqlstate = '1062'; -- duplicate address\par
+\tab\tab\tab\tab SET v_done = 1;\par
+\tab\tab\tab END;\par
+        \par
+\tab\tab\tab -- Handle NOT NULL constraint violation (1048)\par
+\tab\tab\tab DECLARE EXIT HANDLER FOR 1048\par
+\tab\tab\tab BEGIN\par
+\tab\tab\tab\tab ROLLBACK;\par
+\tab\tab\tab\tab SET o_sqlstate = '1048';   -- NOT NULL violation\par
+\tab\tab\tab\tab SET v_done = 1;            -- stop retrying\par
+\tab\tab\tab END;\par
+        \par
+\tab\tab\tab -- Handler for 1406 (Data too long)\par
+\tab\tab\tab DECLARE EXIT HANDLER FOR 1406\par
+\tab\tab\tab BEGIN\par
+\tab\tab\tab\tab ROLLBACK;\par
+\tab\tab\tab\tab SET o_sqlstate = '1406';   -- data too long\par
+\tab\tab\tab\tab SET v_done = 1;            -- stop retrying\par
+\tab\tab\tab END;\par
+            \par
+            -- CHECK constraint violation\par
+\tab\tab\tab DECLARE EXIT HANDLER FOR 3819\par
+            handler_3819: BEGIN\par
+\tab\tab\tab\tab ROLLBACK;\par
+                \par
+\tab\tab\tab\tab -- Count how many validation rules fail\par
+\tab\tab\tab\tab SET @error_count = 0;\par
+\par
+\tab\tab\tab\tab IF p_house_number_or_name IS NULL OR p_house_number_or_name = '' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab IF p_street_name IS NULL OR p_street_name = '' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab IF p_city_or_town IS NULL OR p_city_or_town = '' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab IF p_post_code IS NULL OR p_post_code = '' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab IF p_country IS NULL OR p_country = '' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab IF p_country <> 'UK' THEN\par
+\tab\tab\tab\tab\tab SET @error_count = @error_count + 1;\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab -- If more than one validation fails, return combined error\par
+\tab\tab\tab\tab IF @error_count > 1 THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'MULTI';\par
+\tab\tab\tab\tab\tab SET v_done = 1;\par
+                    LEAVE handler_3819;   -- \f2\u11088? THIS STOPS THE SINGLE-FIELD CHECKS \u11088?\par
+\tab\tab\tab\tab END IF;                \par
+\par
+\tab\tab\tab\tab -- Single-field checks\par
+\tab\tab\tab\tab IF p_house_number_or_name IS NULL OR p_house_number_or_name = '' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'HOUSE_EMPTY';\par
+\par
+\tab\tab\tab\tab ELSEIF p_street_name IS NULL OR p_street_name = '' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'STREET_EMPTY';\par
+\par
+\tab\tab\tab\tab ELSEIF p_city_or_town IS NULL OR p_city_or_town = '' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'CITY_EMPTY';\par
+\par
+\tab\tab\tab\tab ELSEIF p_post_code IS NULL OR p_post_code = '' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'POSTCODE_EMPTY';\par
+\par
+\tab\tab\tab\tab ELSEIF p_country IS NULL OR p_country = '' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'COUNTRY_EMPTY';\par
+\par
+\tab\tab\tab\tab ELSEIF p_country <> 'UK' THEN\par
+\tab\tab\tab\tab\tab SET o_sqlstate = 'COUNTRY_INVALID';\par
+\par
+\tab\tab\tab\tab ELSE\par
+\tab\tab\tab\tab\tab SET o_sqlstate = '3819';\par
+\tab\tab\tab\tab END IF;\par
+\par
+\tab\tab\tab\tab SET v_done = 1;\par
+\tab\tab\tab END;\par
+       \par
+            -- Deadlock handler (SQLSTATE 40001)\par
+            DECLARE EXIT HANDLER FOR SQLSTATE '40001'\par
+            BEGIN\par
+                ROLLBACK;\par
+                -- Retry by continuing the loop\par
+            END;\par
+\par
+            -- Generic error handler\par
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION\par
+            BEGIN\par
+                ROLLBACK;\par
+                SET o_address_id = NULL;\par
+                SET o_house_number_or_name = NULL;\par
+                SET o_street_name = NULL;\par
+                SET o_city_or_town = NULL;\par
+                SET o_post_code = NULL;\par
+                SET o_country = NULL;\par
+                SET o_sqlstate = 'HY000'; -- other SQL error\par
+                SET v_done = 1; -- Stop retrying\par
+            END;\par
+\par
+            START TRANSACTION;\par
+\par
+            -- Row-level lock on the highest ID row (safe under concurrency)\par
+            SELECT CAST(SUBSTRING(address_id, 2) AS UNSIGNED)\par
+            INTO v_max_num\par
+            FROM members_address\par
+            ORDER BY CAST(SUBSTRING(address_id, 2) AS UNSIGNED) DESC\par
+            LIMIT 1\par
+            FOR UPDATE;\par
+\par
+            -- Generate next ID using prefix A\par
+            IF v_max_num IS NULL THEN\par
+                SET v_next_id = 'A0';\par
+            ELSE\par
+                SET v_next_id = CONCAT('A', v_max_num + 1);\par
+            END IF;\par
+\par
+            -- Insert new address\par
+            INSERT INTO members_address (\par
+                address_id,\par
+                house_number_or_name,\par
+                street_name,\par
+                city_or_town,\par
+                post_code,\par
+                country\par
+            )\par
+            VALUES (\par
+                v_next_id,\par
+                p_house_number_or_name,\par
+                p_street_name,\par
+                p_city_or_town,\par
+                p_post_code,\par
+                p_country\par
+            );\par
+\par
+            -- Return full inserted row\par
+            SET o_address_id   = v_next_id;\par
+            SET o_house_number_or_name = p_house_number_or_name;\par
+            SET o_street_name  = p_street_name;\par
+            SET o_city_or_town = p_city_or_town;\par
+            SET o_post_code    = p_post_code;\par
+            SET o_country      = p_country;\par
+\par
+            COMMIT;\par
+            \par
+            SET o_sqlstate = '00000'; -- success\par
+\par
+            SET v_done = 1; -- Success, exit loop\par
+        END;\par
+    END WHILE;\par
+\par
+    -- If all retries failed\par
+    IF v_done = 0 THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'sp_create_address failed after 3 retry attempts.';\par
+    END IF;\par
+\par
+END$$\par
+\par
+DELIMITER ;\par
+
+\pard\sa200\sl276\slmult1\f0\par
+Refactor SP_create_address error handling and add specific MySQL handlers\par
+- IN parameter lengths is set to 255 so user input is accepted without truncation, allowing the procedure\f1\rquote\f0 s validation logic and SQLSTATE handlers to run correctly\par
+- Replaced generic SQLSTATE '23000' duplicate handler with specific MySQL error 1062\par
+- Added dedicated handler for NOT NULL violations (1048)\par
+- Added dedicated handler for data-too-long errors (1406)\par
+- Add handler for 3819 (CHECK constraint violation - for Country column)\par
+- Refactored 3819 CHECK handler to return meaningful codes:\par
+  HOUSE_EMPTY, STREET_EMPTY, CITY_EMPTY, POSTCODE_EMPTY, COUNTRY_EMPTY, COUNTRY_INVALID\par
+- Retained fallback '3819' only for unknown CHECK failures\par
+- Ensured correct handler ordering and consistent v_done control flow\par
+- Improved clarity of o_sqlstate outputs for precise error reporting\par
+- Updated stored procedure (SP_create_address) to detect multiple validation failures\par
+and return new SQLSTATE code MULTI when more than one CHECK constraint is violated.\par
+- Added early\f9\_\f0 exit logic in the 3819 handler using a labeled block to prevent\par
+single\f9\_\f0 field validation codes from overriding the multi\f9\_\f0 error result.\par
+\par
+\par
+\b 05/9/2026 \par
+\b0 Added below stored function to convert strings to title case and also triggers to call the stored function\par
+\b A stored function (to_title_case)\b0\par
+This function converts any string into Title Case, ensuring the first letter of each word is uppercase and the remaining letters are lowercase.\par
+-- Stored Function - Converts a string so each space-separated word is in Title Case (John Smith)\par
+-- Takes the input string (e.g. "john smith").\par
+-- Finds the next space to isolate one word at a time.\par
+-- For each word:\par
+-- Makes the first letter uppercase.\par
+-- Makes the rest of the letters lowercase.\par
+-- Adds the cleaned word to the output.\par
+-- Adds a space between words while there\f1\rquote\f0 s still more text to process.\par
+-- When there\f1\rquote\f0 s no text left, returns the rebuilt string.\par
+-- So:\par
+-- "john smith" \f3\u8594?\f1  \f0 John Smith\par
+-- "mArY aNNe joNES" \f3\u8594?\f1  \f0 Mary Anne Jones\par
+\par
+DELIMITER $$\par
+CREATE FUNCTION \b to_title_case(\b0 str VARCHAR(255))\par
+RETURNS VARCHAR(255)\par
+DETERMINISTIC\par
+BEGIN\par
+    DECLARE output VARCHAR(255) DEFAULT '';\par
+    DECLARE space_pos INT;\par
+    DECLARE word VARCHAR(255);\par
+\par
+    WHILE str IS NOT NULL AND str <> '' DO\par
+        SET space_pos = INSTR(str, ' ');\par
+\par
+        IF space_pos = 0 THEN\par
+            SET word = str;\par
+            SET str = '';\par
+        ELSE\par
+            SET word = SUBSTRING(str, 1, space_pos - 1);\par
+            SET str = SUBSTRING(str, space_pos + 1);\par
+        END IF;\par
+\par
+        SET output = CONCAT(\par
+            output,\par
+            UPPER(LEFT(word, 1)),\par
+            LOWER(SUBSTRING(word, 2))\par
+        );\par
+\par
+        IF str <> '' THEN\par
+            SET output = CONCAT(output, ' ');\par
+        END IF;\par
+    END WHILE;\par
+\par
+    RETURN output;\par
+END $$\par
+\par
+DELIMITER ;\par
+\par
+\b\lang9 Trigger - members_name_titlecase (BEFORE INSERT)\par
+\b0 Automatically title\f9\_\f0 cases the first_name and last_name fields on \lang2057 members_personal_details table \lang9\par
+DELIMITER $$\par
+CREATE TRIGGER members_name_titlecase\par
+BEFORE INSERT ON members_personal_details\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.first_name = to_title_case(NEW.first_name);\par
+    SET NEW.last_name  = to_title_case(NEW.last_name);\par
+END $$\par
+DELIMITER ;\par
+\par
+\b Trigger - members_name_titlecase_update (BEFORE UPDATE)\b0\par
+Automatically title\f9\_\f0 cases the first_name and last_name fields whenever an existing member record is updated.\par
+Trigger on members_address\par
+\lang2057 -- Automatically converts first_name and last_name to Title Case before updating a row\par
+DELIMITER $$\par
+CREATE TRIGGER members_name_titlecase_update\par
+BEFORE UPDATE ON members_personal_details\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.first_name = to_title_case(NEW.first_name);\par
+    SET NEW.last_name  = to_title_case(NEW.last_name);\par
+END $$\par
+DELIMITER ;\par
+\par
+\b\lang9 Trigger - members_address_titlecase (BEFORE INSERT)\par
+\b0 -- Trigger - Automatically converts street_name and city_or_town to Title Case before inserting a new row into members_address table\par
+DELIMITER $$\par
+CREATE TRIGGER members_address_titlecase\par
+BEFORE INSERT ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.street_name   = to_title_case(NEW.street_name);\par
+    SET NEW.city_or_town  = to_title_case(NEW.city_or_town);\par
+END $$\par
+DELIMITER ;\par
+\par
+\b Trigger - \b0 members_address_titlecase_update \b (BEFORE UPDATE)\b0\par
+-- Trigger - Automatically converts street_name and city_or_town to Title Case before updating a row ON members_address\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER members_address_titlecase_update\par
+BEFORE UPDATE ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.street_name   = to_title_case(NEW.street_name);\par
+    SET NEW.city_or_town  = to_title_case(NEW.city_or_town);\par
+END $$\par
+\par
+DELIMITER ;\par
+\par
+-- ==============================================================================================================================    \par
+/* \par
+\b     Trigger: trg_uppercase_postcode_before_insert\par
+\b0     Purpose: Ensures ALL newly inserted postcodes are stored in uppercase,\par
+             regardless of what the user enters in the UI.\par
+             This guarantees consistent postcode formatting in the database.\par
+*/\par
+\par
+DELIMITER $$\par
+CREATE TRIGGER trigger_uppercase_postcode_before_insert\par
+BEFORE INSERT ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.post_code = UPPER(NEW.post_code);\par
+END $$\par
+DELIMITER ;\par
+\par
+-- ==============================================================================================================================\par
+\f7\u-10179?\u-8942?\f9  5. Enforce Unique Address IDs\f0\par
+\f9 ALTER TABLE members_address\f8\lang2057  - done\f9\lang9\par
+ADD CONSTRAINT uq_address_id UNIQUE (address_id);\f0\par
+==============================================================================================================================\par
+\par
+\par
+\par
+\par
+/* \par
+\b     Trigger: trg_uppercase_postcode_before_update\par
+\b0     Purpose: Ensures ALL updated postcodes are stored in uppercase.\par
+             If a user edits a member and enters a lowercase postcode,\par
+             the database automatically converts it to uppercase before saving.\par
+*/\par
+DELIMITER $$\par
+CREATE TRIGGER trigger_uppercase_postcode_before_update\par
+BEFORE UPDATE ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    SET NEW.post_code = UPPER(NEW.post_code);\par
+END $$\par
+DELIMITER ;\par
+\par
+---================================================================\par
+\f7\u-10179?\u-8942?\f9  Prevent Numbers in street_name and city_or_town (MySQL 8.0)\par
+ALTER TABLE members_address\par
+ADD CONSTRAINT chk_street_name_no_numbers\par
+CHECK (street_name NOT REGEXP '[0-9]');\par
+\par
+ALTER TABLE members_address\par
+ADD CONSTRAINT chk_city_or_town_no_numbers\par
+CHECK (city_or_town NOT REGEXP '[0-9]');\par
+\f0\par
+---====================================\par
+\f7\u-10179?\u-8942?\f9  Enforce Valid UK Postcode Format\par
+MySQL supports regex via REGEXP.\par
+ALTER TABLE members_address\par
+ADD CONSTRAINT chk_postcode_format\par
+CHECK (\par
+    post_code = 'ZZZ'\par
+    OR post_code REGEXP '^[A-Z]\{1,2\}[0-9][0-9A-Z]? ?[0-9][A-Z]\{2\}$'\par
+);\par
+\f2\u10004? Allows exactly one special value:\par
+ZZZ\f8\lang2057  - FOR no fixed abode\f9\lang9\par
+\par
+\f2\u10004? Forces all other postcodes to match proper UK format:\par
+Allowed outward code formats (first half)\f8\lang2057  \f9\lang9\par
+ST4 7QB\par
+SW1A 1AA\par
+WV14 8HB\par
+\f8\lang2057 A9 9AA\par
+A99 9AA\par
+A9A 9AA\par
+AA9 9AA\par
+AA99 9AA\par
+AA9A 9AA\par
+\f9\lang9 inward code format (second half)\f8\lang2057  should be 1 \f9\lang9 Digit + Letter + Letter\par
+\f2\u10004? Rejects invalid values:\par
+12345\par
+B196QL\par
+b19 6ql (lowercase)\par
+ABCDE\par
+ZZZZ (only ZZZ allowed)\f0\par
+\f9\par
+\f0 ---====================================\par
+\f9\par
+-- ==============================================================================================================================\par
+-- Trigger: Automatically lowercases the email_address field before inserting a new row.\par
+-- Purpose: Ensures all stored email addresses use consistent lowercase formatting.\par
+-- Example: Input 'RAMAH@EMAIL.COM' will be saved as 'ramah@email.com'.\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER members_email_lowercase\par
+BEFORE INSERT ON members_personal_details\par
+FOR EACH ROW\par
+BEGIN\par
+    IF NEW.email_address IS NOT NULL THEN\par
+        SET NEW.email_address = LOWER(NEW.email_address);\par
+    END IF;\par
+END $$\par
+\par
+DELIMITER ;\par
+\par
+\par
+-- ==============================================================================================================================\par
+-- Trigger: Automatically lowercases the email_address field before updating a row.\par
+-- Purpose: Ensures all stored email addresses remain consistently formatted in lowercase,\par
+--          even when a user edits or changes their email.\par
+-- Example: Updating 'RAMAH@EMAIL.COM' will save it as 'ramah@email.com'.\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER members_email_lowercase_update\par
+BEFORE UPDATE ON members_personal_details\par
+FOR EACH ROW\par
+BEGIN\par
+    IF NEW.email_address IS NOT NULL THEN\par
+        SET NEW.email_address = LOWER(NEW.email_address);\par
+    END IF;\par
+END $$\par
+\par
+DELIMITER ;\par
+\par
+\ldblquote RAMAH@EMAIL.COM\rdblquote  \f3\u8594?\f9  \ldblquote\f8 ramah@email.com\f9\rdblquote\par
+\par
+No\f5  \f9 numbers\f5  \f9 in\f5  \f9 city\f5  \f9 names\par
+\par
+\par
+\f8\lang2057 ---===============================\par
+-- Trigger: Prevents inserting a row if city_or_town or street_name contains any numbers.\par
+-- Purpose: Ensures address fields remain valid text-only names (e.g., "London", "Valley Road").\par
+-- Example: Input "Lon9don" or "Road 12" will cause the insert to fail.\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER members_address_no_numbers_insert\par
+BEFORE INSERT ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    IF NEW.city_or_town REGEXP '[0-9]' THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'city_or_town cannot contain numbers';\par
+    END IF;\par
+\par
+    IF NEW.street_name REGEXP '[0-9]' THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'street_name cannot contain numbers';\par
+    END IF;\par
+END $$\par
+\par
+DELIMITER ;\par
+\par
+\par
+-- ==============================================================================================================================\par
+-- Trigger: Prevents updating a row if city_or_town or street_name contains numbers.\par
+-- Purpose: Ensures address fields stay clean even when edited.\par
+-- Example: Updating to "St0ke" or "Hill 9" will be rejected.\par
+\par
+DELIMITER $$\par
+\par
+CREATE TRIGGER Trigger_members_address_no_numbers_update\par
+BEFORE UPDATE ON members_address\par
+FOR EACH ROW\par
+BEGIN\par
+    IF NEW.city_or_town REGEXP '[0-9]' THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'city_or_town cannot contain numbers';\par
+    END IF;\par
+\par
+    IF NEW.street_name REGEXP '[0-9]' THEN\par
+        SIGNAL SQLSTATE '45000'\par
+            SET MESSAGE_TEXT = 'street_name cannot contain numbers';\par
+    END IF;\par
+END $$\par
+\par
+DELIMITER ;\par
+\f5 -- ====================================================================\f9\par
+\f5 -- \f9 Trigger\f5 : \f9 Validates\f5  \f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 before\f5  \f9 inserting\f5  \f9 a\f5  \f9 new\f5  \f9 row\f5 .\f9\par
+\f5 -- \f9 Trigger\f5 : \f9 Validates\f5  \f9 the\f5  \f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 before\f5  \f9 inserting\f5  \f9 a\f5  \f9 new\f5  \f9 row\f5 .\f9\par
+\f5 -- \f9 Purpose\f5 : \f9 Ensures\f5  \f9 the\f5  \f9 contact\f5  \f9 number\f5  \f9 is\f5  \f9 either\f5 :\f9\par
+\f5 --          \f9 1\f5 ) \f9 'none'\par
+\f5 --          \f9 2\f5 ) \f9 'unknown'\par
+\f5 --          \f9 3\f5 ) \f9 a\f5  \f9 numeric\f5 -\f9 only\f5  \f9 phone\f5  \f9 number\f5  (\f9 digits\f5  \f9 only\f5 , \f9 no\f5  \f9 spaces\f5  \f9 or\f5  \f9 symbols\f5 )\f9\par
+\f5 -- \f9 Behavior\f5 : \f9 Any\f5  \f9 value\f5  \f9 outside\f5  \f9 these\f5  \f9 rules\f5  \f9 will\f5  \f9 cause\f5  \f9 the\f5  \f9 INSERT\f5  \f9 to\f5  \f9 fail\par
+\f5 -- \f9 Example\f5 : \f9 '1234567890'\f5  \f9 is\f5  \f9 allowed\f5 ; \f9 '\f5 +\f9 44'\f5 , \f9 '12\f5 -\f9 34'\f5 , \f9 'abc'\f5 , \f9 or\f5  \f9 '123\f5  \f9 abc'\f5  \f9 are\f5  \f9 rejected\f5 .\f9\par
+\par
+DELIMITER\f5  \f9 $$\par
+\par
+CREATE\f5  \f9 TRIGGER\f5  \f9 members\f5 _\f9 contact\f5 _\f9 number\f5 _\f9 validate\f5 _\f9 insert\par
+BEFORE\f5  \f9 INSERT\f5  \f9 ON\f5  \f9 members\f5 _\f9 personal\f5 _\f9 details\par
+FOR\f5  \f9 EACH\f5  \f9 ROW\par
+BEGIN\par
+\f5     -- \f9 Normalise\f5  \f9 to\f5  \f9 lowercase\par
+\f5     \f9 SET\f5  \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  = \f9 LOWER\f5 (\f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5 );\f9\par
+\par
+\f5     -- \f9 If\f5  \f9 it's\f5  \f9 NOT\f5  \f9 'none'\f5  \f9 or\f5  \f9 'unknown'\f5  \f9 AND\f5  \f9 NOT\f5  \f9 digits\f5 -\f9 only\f5 , \f9 reject\f5  \f9 it\par
+\f5     \f9 IF\f5  \f9 NOT\f5  (\f9\par
+\f5         \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 IN\f5  (\f9 'none'\f5 , \f9 'unknown'\f5 )\f9\par
+\f5         \f9 OR\f5  \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 REGEXP\f5  \f9 '\f5 ^[\f9 0\f5 -\f9 9\f5 ]+\f9 $'\par
+\f5     ) \f9 THEN\par
+\f5         \f9 SIGNAL\f5  \f9 SQLSTATE\f5  \f9 '45000'\par
+\f5             \f9 SET\f5  \f9 MESSAGE\f5 _\f9 TEXT\f5  = \f9 'main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 must\f5  \f9 be\f5  \f9 ''none''\f5 , \f9 ''unknown''\f5 , \f9 or\f5  \f9 numeric\f5  \f9 digits\f5  \f9 only'\f5 ;\f9\par
+\f5     \f9 END\f5  \f9 IF\f5 ;\f9\par
+END\f5  \f9 $$\par
+\par
+DELIMITER\f5  ;\f9\par
+\par
+\par
+\par
+\f5 -- ==================================================================\f9\par
+\f5 -- \f9 Trigger\f5 : \f9 Validates\f5  \f9 the\f5  \f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 before\f5  \f9 updating\f5  \f9 an\f5  \f9 existing\f5  \f9 row\f5 .\f9\par
+\f5 -- \f9 Purpose\f5 : \f9 Ensures\f5  \f9 edits\f5  \f9 also\f5  \f9 follow\f5  \f9 the\f5  \f9 same\f5  \f9 strict\f5  \f9 rules\f5 :\f9\par
+\f5 --          \f9 'none'\f5 , \f9 'unknown'\f5 , \f9 or\f5  \f9 digits\f5 -\f9 only\f5  \f9 phone\f5  \f9 numbers\f5 .\f9\par
+\f5 -- \f9 Behavior\f5 : \f9 Any\f5  \f9 invalid\f5  \f9 value\f5  \f9 will\f5  \f9 cause\f5  \f9 the\f5  \f9 UPDATE\f5  \f9 to\f5  \f9 fail\f5 .\f9\par
+\f5 -- \f9 Example\f5 : \f9 Changing\f5  \f9 'none'\f5  \f9 to\f5  \f9 '12345'\f5  \f9 is\f5  \f9 allowed\f5 ; \f9 changing\f5  \f9 to\f5  \f9 '12\f5 -\f9 34'\f5  \f9 or\f5  \f9 '\f5 +\f9 4477'\f5  \f9 is\f5  \f9 rejected\f5 .\f9\par
+\par
+DELIMITER\f5  \f9 $$\par
+\par
+CREATE\f5  \f9 TRIGGER\f5  \f9 members\f5 _\f9 contact\f5 _\f9 number\f5 _\f9 validate\f5 _\f9 update\par
+BEFORE\f5  \f9 UPDATE\f5  \f9 ON\f5  \f9 members\f5 _\f9 personal\f5 _\f9 details\par
+FOR\f5  \f9 EACH\f5  \f9 ROW\par
+BEGIN\par
+\f5     \f9 SET\f5  \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  = \f9 LOWER\f5 (\f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5 );\f9\par
+\par
+\f5     \f9 IF\f5  \f9 NOT\f5  (\f9\par
+\f5         \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 IN\f5  (\f9 'none'\f5 , \f9 'unknown'\f5 )\f9\par
+\f5         \f9 OR\f5  \f9 NEW\f5 .\f9 main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 REGEXP\f5  \f9 '\f5 ^[\f9 0\f5 -\f9 9\f5 ]+\f9 $'\par
+\f5     ) \f9 THEN\par
+\f5         \f9 SIGNAL\f5  \f9 SQLSTATE\f5  \f9 '45000'\par
+\f5             \f9 SET\f5  \f9 MESSAGE\f5 _\f9 TEXT\f5  = \f9 'main\f5 _\f9 contact\f5 _\f9 number\f5  \f9 must\f5  \f9 be\f5  \f9 ''none''\f5 , \f9 ''unknown''\f5 , \f9 or\f5  \f9 numeric\f5  \f9 digits\f5  \f9 only'\f5 ;\f9\par
+\f5     \f9 END\f5  \f9 IF\f5 ;\f9\par
+END\f5  \f9 $$\par
+\par
+DELIMITER\f5  ;\f9\par
+\par
+\par
+\f8 27/10/2026\par
+\b\f0\lang9 REQUEST FOR OTHER TYPES OF SUPPORT - DB CHANGES\par
+\b0\f9\lang2057 ALTER TABLE other_support_requested_by_members\par
+ADD COLUMN progress_notes LONGTEXT NULL,\par
+ADD COLUMN last_progress_update_date DATETIME NULL;\par
+\par
+-- progress_notes stores the append-only support history.\par
+-- last_progress_update_date starts as NULL.\par
+-- The backend updates last_progress_update_date only when a new progress note is added.\par
+-- Status changes such as:\par
+-- awaiting allocation \f3\u8594? support ongoing\par
+-- support ongoing \u8594? referral closed\par
+-- do not affect last_progress_update_date.\par
+-- The frontend will use a status dropdown to update current_status_of_request.\f9\lang2057\par
+\par
+\f8\par
+\f9\lang9\par
 }
  

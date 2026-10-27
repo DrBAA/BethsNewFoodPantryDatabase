@@ -22,6 +22,107 @@ MODIFY house_number VARCHAR(15) NOT NULL;
 ALTER TABLE members_address
 MODIFY post_code VARCHAR(10) NOT NULL;
 
+--
+ALTER TABLE members_address
+    CHANGE COLUMN house_number house_number_or_name VARCHAR(15) NOT NULL;
+
+--
+
+ALTER TABLE members_address
+    MODIFY COLUMN street_name VARCHAR(50) NOT NULL;
+
+ALTER TABLE members_address
+    MODIFY COLUMN city_or_town VARCHAR(50) NOT NULL;
+
+ALTER TABLE members_address
+    ADD CONSTRAINT UQ_members_address_unique
+        UNIQUE (house_number_or_name, post_code);
+
+ALTER TABLE members_address
+    MODIFY COLUMN country VARCHAR(10) NOT NULL;
+--
+ALTER TABLE members_address
+    MODIFY country VARCHAR(2) NOT NULL DEFAULT 'UK',
+    ADD CONSTRAINT CHK_country_only_uk CHECK (country = 'UK');
+  
+ALTER TABLE members_address
+ADD CONSTRAINT uq_address_id UNIQUE (address_id);
+
+  
+--
+UPDATE members_address
+SET house_number_or_name = '39'
+WHERE address_id = 'A21';
+  
+--
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_no_empty_values
+CHECK (
+    TRIM(house_number_or_name) <> '' AND
+    TRIM(street_name) <> '' AND
+    TRIM(city_or_town) <> '' AND
+    TRIM(post_code) <> '' AND
+    TRIM(country) <> ''
+);
+
+
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_house_number_not_empty CHECK (TRIM(house_number_or_name) <> '');
+
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_street_name_not_empty CHECK (TRIM(street_name) <> '');
+
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_city_not_empty CHECK (TRIM(city_or_town) <> '');
+
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_post_code_not_empty CHECK (TRIM(post_code) <> '');
+
+ALTER TABLE members_address
+ADD CONSTRAINT CHK_country_not_empty CHECK (TRIM(country) <> '');
+
+ALTER TABLE members_address
+DROP CONSTRAINT CHK_no_empty_values;
+
+SHOW CREATE TABLE members_address;
+# Table, Create Table
+-- 'members_address', 'CREATE TABLE `members_address` 
+-- (\n  `address_id` varchar(10) NOT NULL,
+-- \n  `house_number_or_name` varchar(15) NOT NULL,
+-- \n  `street_name` varchar(50) NOT NULL,
+-- \n  `city_or_town` varchar(50) NOT NULL,
+-- \n  `post_code` varchar(10) NOT NULL,
+-- \n  `country` varchar(2) NOT NULL DEFAULT \'UK\',
+-- \n  PRIMARY KEY (`address_id`),\n  UNIQUE KEY `UQ_members_address_unique` (`house_number_or_name`,`post_code`),
+-- \n  CONSTRAINT `CHK_city_not_empty` CHECK ((trim(`city_or_town`) <> _utf8mb4\'\')),
+-- \n  CONSTRAINT `CHK_country_not_empty` CHECK ((trim(`country`) <> _utf8mb4\'\')),
+-- \n  CONSTRAINT `CHK_house_number_not_empty` CHECK ((trim(`house_number_or_name`) <> _utf8mb4\'\')),
+-- \n  CONSTRAINT `CHK_street_name_not_empty` CHECK ((trim(`street_name`) <> _utf8mb4\'\'))\n) 
+-- \n  CONSTRAINT `CHK_post_code_not_empty` CHECK ((trim(`post_code`) <> _utf8mb4\'\')),
+-- \n  CONSTRAINT `CHK_country_only_uk` CHECK ((`country` = _utf8mb4\'UK\')),
+-- ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
+
+
+--
+ALTER TABLE members_address
+ADD CONSTRAINT chk_street_name_no_numbers
+CHECK (street_name NOT REGEXP '[0-9]');
+
+ALTER TABLE members_address
+ADD CONSTRAINT chk_city_or_town_no_numbers
+CHECK (city_or_town NOT REGEXP '[0-9]');
+
+
+-- Add a CHECK constraint:
+ALTER TABLE members_address
+ADD CONSTRAINT chk_postcode_format
+CHECK (
+    post_code = 'ZZZ'
+    OR post_code REGEXP '^[A-Z]{1,2}[0-9][0-9A-Z]? ?[0-9][A-Z]{2}$'
+);
+
+
+
 
 -- ===================================================================================  
 
@@ -354,6 +455,19 @@ MODIFY initial_outcome_of_request VARCHAR(100) NOT NULL;
 ALTER TABLE other_support_requested_by_members
 MODIFY current_status_of_request VARCHAR(100) NOT NULL;
 
+-- ====================================================================================================================================================================
+ALTER TABLE other_support_requested_by_members
+ADD COLUMN progress_notes LONGTEXT NULL,
+ADD COLUMN last_progress_update_date DATETIME NULL;
+
+-- progress_notes stores the append-only support history.
+-- last_progress_update_date starts as NULL.
+-- The backend updates last_progress_update_date only when a new progress note is added.
+-- Status changes such as:
+-- awaiting allocation → support ongoing
+-- support ongoing → referral closed
+-- do not affect last_progress_update_date.
+-- The frontend will use a status dropdown to update current_status_of_request.
 
 
 -- ====================================================================================================================================================================

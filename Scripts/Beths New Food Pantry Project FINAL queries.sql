@@ -341,13 +341,14 @@ CREATE OR REPLACE VIEW View_member_full_details AS
 		mpd.dependants_under_18,
 		mpd.main_contact_number,
 		mpd.email_address,
-		ma.house_number,
+		ma.house_number_or_name,
 		ma.street_name,
 		ma.city_or_town,
-		ma.post_code
+		ma.post_code,
+        ma.country
 	FROM beths_new_food_pantry.members_personal_details mpd
 	JOIN (
-		SELECT address_id, house_number, street_name, city_or_town, post_code
+		SELECT address_id, house_number_or_name, street_name, city_or_town, post_code, country
 		FROM beths_new_food_pantry.members_address
 	) ma ON mpd.address_id = ma.address_id;
 
@@ -356,7 +357,7 @@ CREATE OR REPLACE VIEW View_member_full_details AS
 CREATE OR REPLACE VIEW View_member_address_and_contact AS
 	SELECT * FROM View_member_full_details;
 
-
+SELECT * FROM View_member_address_and_contact;
 
 
 
