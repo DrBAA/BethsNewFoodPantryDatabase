@@ -470,6 +470,19 @@ ADD COLUMN last_progress_update_date DATETIME NULL;
 -- The frontend will use a status dropdown to update current_status_of_request.
 
 
+-- ===================================================================================================
+-- Make key columns mandatory and provide sensible defaults for new support requests
+-- MySQL automatically insert today's date when the date_requested column is omitted from an INSERT
+-- ===================================================================================================
+
+ALTER TABLE other_support_requested_by_members
+MODIFY COLUMN date_requested DATE NOT NULL DEFAULT (CURRENT_DATE),
+MODIFY COLUMN initial_outcome_of_request VARCHAR(100)
+    NOT NULL DEFAULT 'awaiting initial decision',
+MODIFY COLUMN current_status_of_request VARCHAR(100)
+    NOT NULL DEFAULT 'awaiting initial decision';
+
+
 -- ====================================================================================================================================================================
 
 CREATE TABLE temp_search_results_after_check_eligiblity_for_food_parcel (

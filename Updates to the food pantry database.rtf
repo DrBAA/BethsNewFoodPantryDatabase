@@ -1187,7 +1187,7 @@ END\f5  \f9 $$\par
 DELIMITER\f5  ;\f9\par
 \par
 \par
-\f8 27/10/2026\par
+\b\f8 27/10/2026\b0\par
 \b\f0\lang9 REQUEST FOR OTHER TYPES OF SUPPORT - DB CHANGES\par
 \b0\f9\lang2057 ALTER TABLE other_support_requested_by_members\par
 ADD COLUMN progress_notes LONGTEXT NULL,\par
@@ -1200,7 +1200,45 @@ ADD COLUMN last_progress_update_date DATETIME NULL;\par
 -- awaiting allocation \f3\u8594? support ongoing\par
 -- support ongoing \u8594? referral closed\par
 -- do not affect last_progress_update_date.\par
--- The frontend will use a status dropdown to update current_status_of_request.\f9\lang2057\par
+-- The frontend will use a status dropdown to update current_status_of_request.\par
+\par
+feat(support): add support progress tracking fields\par
+\par
+- Added progress_notes LONGTEXT column to store append-only support history updates\par
+- Added last_progress_update_date DATETIME column to track the timestamp of the latest progress update\par
+- Configured last_progress_update_date to be managed by the backend when a progress note is added\par
+- Supports progress history display and ongoing support case tracking\par
+\par
+feat(db): add support request progress tracking\par
+\par
+\f5\lang2057 git add .\par
+git commit -m "DB: altered \f9 other_support_requested_by_members\f8  table\f5  to e\f4 nable storage of support history and latest progress update timestamp\f5\par
+\f4 - Add progress_notes LONGTEXT\par
+- Add last_progress_update_date DATETIME\f5 "\par
+git push\par
+\f4\par
+\par
+\b\f8 28/10/2026\b0\par
+\f9 -- ===================================================================================================\par
+-- Make key columns mandatory and provide sensible defaults for new support requests\par
+-- MySQL automatically insert today's date when the date_requested column is omitted from an INSERT\par
+-- ===================================================================================================\par
+ALTER TABLE other_support_requested_by_members\par
+MODIFY COLUMN date_requested DATE NOT NULL DEFAULT (CURRENT_DATE),\par
+MODIFY COLUMN initial_outcome_of_request VARCHAR(100)\par
+    NOT NULL DEFAULT 'awaiting initial decision',\par
+MODIFY COLUMN current_status_of_request VARCHAR(100)\par
+    NOT NULL DEFAULT 'awaiting initial decision';\par
+\par
+\f8 git add .\par
+git commit -m "\f9 feat(db):\f8  other_support_requested_by_members -\f9  enhance support request tracking\par
+- Made date_requested NOT NULL with automatic current date default\f8 . This will auto-populate date_requested with current date if no data is provided from front end when a row is added to this table.\f9\par
+- Set default value of 'awaiting initial decision' for:\par
+  - initial_outcome_of_request\par
+  - current_status_of_request\par
+- Prepared support request workflow for status management and progress note tracking\f8 "\par
+git push\f9\par
+\par
 \par
 \f8\par
 \f9\lang9\par
