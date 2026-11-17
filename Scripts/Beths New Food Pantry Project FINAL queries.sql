@@ -37,7 +37,7 @@ AS
         full_name(first_name, last_name) AS members_name,
         post_code,
         type_of_support,
-		date_requested, initial_outcome_of_request AS initial_outome,
+		date_requested, initial_outcome_of_request AS initial_outcome,
         current_status_of_request 
 	FROM
 		members_personal_details mpd
@@ -53,8 +53,7 @@ AS
 	ON
 		ots.type_of_support_id = osr.type_of_support_id
 	WHERE
-		current_status_of_request  = 'awaiting allocation'
-		OR current_status_of_request  = 'support ongoing'       
+		current_status_of_request  <> 'referral closed'
 	ORDER BY
 		current_status_of_request ASC, date_requested;
 
@@ -210,7 +209,7 @@ AS
 		Beths_new_food_pantry.main_support_collection_point AS mscp 
 	ON
 		mscp.collection_point_id = mifp.collection_point_id);
- */ 
+*/
 
 SELECT * FROM
 	(SELECT
@@ -417,7 +416,7 @@ FROM
 			mscp.collection_point_id = milc.collection_point_id) AS all_members
       
 WHERE
-	laptop_computer_type IS NULL OR date_last_issued IS NULL;  
+	laptop_computer_type IS NULL OR date_issued IS NULL;  
       
 
 
@@ -450,7 +449,8 @@ AS
 			email_address,
 			laptop_computer_type,
 			date_issued,
-			CONCAT(collection_point_name, ', ', collection_point_location, ', ', collection_point_city) AS collection_point_location
+			CONCAT(collection_point_name, ', ', collection_point_location, ', ', collection_point_city) AS collection_point_location,
+            IF((date_issued IS NULL), 'YES, click here to issue a laptop', 'NO. Member already issued a laptop') AS Issue_a_laptop_or_Not            
 		FROM
 			Beths_new_food_pantry.members_personal_details AS mpd 
 		INNER JOIN
@@ -470,6 +470,37 @@ AS
 		ON
 			mscp.collection_point_id = milc.collection_point_id); 
       
+SELECT * FROM View_members_issued_with_laptops
+ORDER BY member_id DESC;
+
+-- ==============================================================================================================
+
+-- ADDED 17/11/2026 TO SHOW MEMBERS WHO HAVE RECEIVED OR NOT RECEIVED A LAPTOP 
+
+CREATE OR REPLACE VIEW View_members_Issued_or_Not_issued_with_laptops AS
+SELECT
+	mpd.member_id,
+	full_name(first_name, last_name) AS members_name,
+	post_code,
+	laptop_computer_type,
+	date_issued,
+	CONCAT(collection_point_name, ', ', collection_point_location, ', ', collection_point_city) AS collection_point_location,
+	IF((date_issued IS NULL), 'YES, issue a laptop', 'NO. Member already issued a laptop') AS issue_a_laptop_or_Not            
+FROM
+    Beths_new_food_pantry.members_personal_details AS mpd
+LEFT JOIN
+    Beths_new_food_pantry.members_address AS ma ON ma.address_id = mpd.address_id
+LEFT JOIN 
+    Beths_new_food_pantry.members_issued_laptop_computers AS milc ON mpd.member_id = milc.member_id
+LEFT JOIN 
+    Beths_new_food_pantry.laptop_computers_for_issue AS lcfi ON milc.laptop_computer_id = lcfi.laptop_computer_id
+LEFT JOIN
+    Beths_new_food_pantry.main_support_collection_point AS mscp ON mscp.collection_point_id = milc.collection_point_id;
+
+
+SELECT * FROM View_members_Issued_or_Not_issued_with_laptops
+WHERE date_issued IS NULL;
+-- ORDER BY Issue_a_laptop_or_Not ;
 
 -- ========================================================================================================
 
